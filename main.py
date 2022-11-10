@@ -28,19 +28,25 @@ def parse_overview(soup):
         if title_item != None:
             title = title_item.text.strip()
             value = [item.text.strip() for item in parameter.find_all("p")]
-
-        # if title == "Open & closing dates":
-        #     if len(value) > 0:
-        #         dates_in_string = value[0].split()
-        #     if len(dates_in_string) < 7:
-        #         print(value)
-        #     else:
-        #         overview.update({"Opening date":dates_in_string[4],"Closing date":dates_in_string[6]})
-        # elif title == "Salary": m
-        #     overview.update({"Lower range": value[0].split()[0], "Upper range": value[0].split()[2]})
-        # else :
             overview.update({title: value[0]})
     return overview
+
+def parse_card_header(soup):
+    """
+    Parses the overview section of the individual announcement page
+    :return: dictionary of the overview items
+
+    """
+    card_header = soup.find(class_="usajobs-joa-banner__body usajobs-joa-banner--pilot__body")
+
+    title_class = "usajobs-joa-banner__title"
+    title = card_header.find(class_=title_class).text.strip()
+    department_class = "usajobs-joa-banner__dept"
+    department = card_header.find(class_=department_class).text.strip()
+    agency_class = "usajobs-joa-banner__agency usajobs-joa-banner--v1-3__agency"
+    agency = card_header.find(class_=agency_class).text.strip()
+
+    return {"Department" : department, "Agency" : agency, "Title" : title}
 
 def parse_requirements(soup):
     """
@@ -55,30 +61,45 @@ def parse_requirements(soup):
         requirements.append(req.text.strip())
     return {"Requirements": requirements}
 
+def parse_job_card(details):
+
+    job_card = {**parse_card_header(details), **parse_overview(details)}
+    job_card.update(parse_requirements(details))
+    return job_card
 
 def parse_job_cards(url_name,limit=-1):
     """
     Parses the page with list of the cards.
     Returns list of dictionaries (each card is represented by a dictionary)
     """
-
     soup = html_open(url_name)
-    job_notices = soup.find_all(class_="usajobs-search-result--card")
-    print(len(job_notices))
+    count = int(soup.find(class_="usajobs-search-controls__results-count").text.split()[0].strip())
+    print("Cards on page: ",count)
+    page_number = 1
     jobs = []
-    for i, job_notice in enumerate(job_notices):
-        if i == limit: #limiting output for debugging
+    while True:
+        print("Page number = ",page_number)
+        url_name_wpage = url_name + "&sort=enddate&page=" + str(page_number)
+        print("scraping from url ", url_name_wpage)
+        soup = html_open(url_name_wpage)
+        job_notices = soup.find_all(class_="usajobs-search-result--card")
+        number_of_cards = len(job_notices)
+        print("Cards on this page: ",number_of_cards)
+        page_number += 1
+        for i, job_notice in enumerate(job_notices):
+            if i == limit: #limiting output for debugging
+                break
+            # title = job_notice.find(class_="usajobs-search-result__title").text.strip()
+            # department = job_notice.find(class_="usajobs-search-result__department").text.strip()
+            details_url = job_notice.find("a", href=True)["href"]
+            details = html_open(details_url)
+            job_card = parse_job_card(details)
+            # job_card.update({"Title": title})
+            # job_card.update({"Department": department})
+            jobs.append(job_card )
+        if number_of_cards < 25:
             break
-        details_url = job_notice.find("a", href=True)["href"]
-        details = html_open(details_url)
-        job_card = parse_overview(details)
-        job_card.update(parse_requirements(details))
-        title = job_notice.find(class_ ="usajobs-search-result__title").text.strip()
-        department = job_notice.find(class_="usajobs-search-result__department").text.strip()
-        job_card.update({"Title" : title})
-        job_card.update({"Department" : department})
-        jobs.append(job_card )
-
+    print(f"Total {len(jobs)} cards scraped from this page")
     return jobs
 
 def parse_sections(soup):
@@ -92,7 +113,6 @@ def parse_sections(soup):
     class_of_title = "usajobs-landing-find-opportunities__section-title"
     class_of_item = "usajobs-landing-find-opportunities__job-item"
     titles = soup.find_all("li",class_=[class_of_item,class_of_title])
-    print(len(titles))
     sections = []
     current_title = ""
     current_index = 0
@@ -102,7 +122,6 @@ def parse_sections(soup):
         class_name = title['class'][0]
 
         if class_name == class_of_title:
-            print("Header found: ",class_name)
             if len(sections) > 0:
                 print(sections[current_index])
             current_title = title.text.strip()
@@ -115,7 +134,8 @@ def parse_sections(soup):
             card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
             print("Parsing: ",card_url)
             cards = parse_job_cards(card_url)
-            print("Cards in section", cards)
+            for card in cards:
+                print(card["Title"])
             out_file += str(cards) + "\n\n"
             sections[current_index][current_title].append({title.text.strip() : cards})
             file = open("output.txt","w")
