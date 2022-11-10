@@ -1,10 +1,15 @@
 import requests
 from bs4 import BeautifulSoup
 
-url_name = 'https://www.usajobs.gov/Search/ExploreOpportunities?Series=1550'
+URL_NAME = 'https://www.usajobs.gov/?c=opportunities'
+
+
 
 def html_open(url_name):
-
+    """
+    Opens web page at url_name
+    Returns the soup of the whole page
+    """
     page = requests.get(url_name)
     return BeautifulSoup(page.content, "html.parser")
 
@@ -43,8 +48,9 @@ def parse_requirements(soup):
     return {"Requirements": requirements}
 
 
-def parse_job_cards(soup):
+def parse_job_cards(url_name):
 
+    soup = html_open(url_name)
     job_notices = soup.find_all(class_="usajobs-search-result--card")
     print(len(job_notices))
     jobs = []
@@ -59,14 +65,41 @@ def parse_job_cards(soup):
         job_card.update({"Department" : department})
         jobs.append(job_card )
 
-
     return jobs
+
+def parse_sections(soup):
+    """
+    Top level parser, parses the page with the list of the sections opportunities are grouped to
+    """
+
+    titles_section = soup.find("div",class_="usajobs-landing-find-opportunities__section-container")
+    titles = soup.find_all("li")
+    print(len(titles))
+    sections = []
+    current_title = ""
+    current_index = 0
+    for title in titles:
+        class_name = title['class'][0]
+        if class_name == "usajobs-landing-find-opportunities__section-title":
+            current_title = title.text.strip()
+            print("Section title =",current_title)
+            sections.append({current_title:[]})
+            current_index = len(sections)-1
+        elif class_name == "usajobs-landing-find-opportunities__job-item":
+            print(title.text.strip())
+            card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
+            print("Parsing: ",card_url)
+            cards = parse_job_cards(card_url)
+            sections[current_index][current_title].append({title : cards})
+    print(sections['Mathematics'])
+
 
 if __name__ == "__main__":
 
-    soup = html_open(url_name)
-    jobs = parse_job_cards(soup)
-    for job in jobs:
-        print(job["Department"])
-        print(job("Salary"))
-        print(job["Open&Closing dates"])
+    soup = html_open(URL_NAME)
+    # soup = BeautifulSoup(file,"html-parser")
+    sections = parse_sections(soup)
+
+
+
+
