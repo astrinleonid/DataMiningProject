@@ -15,9 +15,13 @@ def html_open(url_name):
 
 
 def parse_overview(soup):
+    """
+    Parses the overview section of the individual announcement page
+    :return: dictionary of the overview items
+
+    """
 
     overview = {}
-    # print(soup.find().text)
 
     for parameter in soup.find_all(class_="usajobs-joa-summary__item usajobs-joa-summary--beta__item"):
         title_item = parameter.find("h5")
@@ -39,6 +43,10 @@ def parse_overview(soup):
     return overview
 
 def parse_requirements(soup):
+    """
+    Parses the Requirements section of of the individual announcement page.
+    Returns one-item dictionary with the key "requirements" and the list of requirements as value
+    """
 
     requirements = []
     requirements_section = soup.find('div', id="requirements")
@@ -48,13 +56,19 @@ def parse_requirements(soup):
     return {"Requirements": requirements}
 
 
-def parse_job_cards(url_name):
+def parse_job_cards(url_name,limit=-1):
+    """
+    Parses the page with list of the cards.
+    Returns list of dictionaries (each card is represented by a dictionary)
+    """
 
     soup = html_open(url_name)
     job_notices = soup.find_all(class_="usajobs-search-result--card")
     print(len(job_notices))
     jobs = []
-    for job_notice in job_notices:
+    for i, job_notice in enumerate(job_notices):
+        if i == limit: #limiting output for debugging
+            break
         details_url = job_notice.find("a", href=True)["href"]
         details = html_open(details_url)
         job_card = parse_overview(details)
@@ -68,30 +82,45 @@ def parse_job_cards(url_name):
     return jobs
 
 def parse_sections(soup):
-    """
-    Top level parser, parses the page with the list of the sections opportunities are grouped to
-    """
 
+    """
+    Top level parser, parses the page with the list of the sections opportunities are grouped to topics.
+    Return the list of the dictionaries: Name of the section as key, dictionary of embedded sections as value.
+    Each embedded dictionary contains subsection names as keys, list of cards as value
+    """
     titles_section = soup.find("div",class_="usajobs-landing-find-opportunities__section-container")
-    titles = soup.find_all("li")
+    class_of_title = "usajobs-landing-find-opportunities__section-title"
+    class_of_item = "usajobs-landing-find-opportunities__job-item"
+    titles = soup.find_all("li",class_=[class_of_item,class_of_title])
     print(len(titles))
     sections = []
     current_title = ""
     current_index = 0
+    out_file = ""
     for title in titles:
+
         class_name = title['class'][0]
-        if class_name == "usajobs-landing-find-opportunities__section-title":
+
+        if class_name == class_of_title:
+            print("Header found: ",class_name)
+            if len(sections) > 0:
+                print(sections[current_index])
             current_title = title.text.strip()
             print("Section title =",current_title)
             sections.append({current_title:[]})
+            out_file += "\n\n" + current_title + "\n"
             current_index = len(sections)-1
-        elif class_name == "usajobs-landing-find-opportunities__job-item":
+        elif class_name == class_of_item:
             print(title.text.strip())
             card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
             print("Parsing: ",card_url)
             cards = parse_job_cards(card_url)
-            sections[current_index][current_title].append({title : cards})
-    print(sections['Mathematics'])
+            print("Cards in section", cards)
+            out_file += str(cards) + "\n\n"
+            sections[current_index][current_title].append({title.text.strip() : cards})
+            file = open("output.txt","w")
+            file.write(out_file)
+            file.close
 
 
 if __name__ == "__main__":
