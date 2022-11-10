@@ -130,17 +130,23 @@ def parse_sections(soup):
             out_file += "\n\n" + current_title + "\n"
             current_index = len(sections)-1
         elif class_name == class_of_item:
-            print(title.text.strip())
+            title_string = title.text.strip()
+            print(title_string)
             card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
             print("Parsing: ",card_url)
             cards = parse_job_cards(card_url)
+
+            # out_file = title_string
             for card in cards:
                 print(card["Title"])
-            out_file += str(cards) + "\n\n"
+                out_file += str(card) + "\n\n"
+
+            # file = open("~Results/Output " + title_string + ".txt", "w")
+            # file.write(out_file)
+            # file.close
+
             sections[current_index][current_title].append({title.text.strip() : cards})
-            file = open("output.txt","w")
-            file.write(out_file)
-            file.close
+
 
 
 if __name__ == "__main__":
