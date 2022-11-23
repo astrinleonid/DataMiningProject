@@ -162,9 +162,6 @@ def parse_job_cards(url_name,limit=-1):
             job_card = parse_job_card(details)
 
             v_counter.add_card(job_card)
-            # TODO : overview_items_list_update(job_card, OVERVIEW_ITEMS)
-
-
             jobs.append(job_card )
             for duty, duty_hash in job_card["Duties"]:
                 duties_number += 1
