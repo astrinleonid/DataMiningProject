@@ -1,106 +1,24 @@
 import requests
 from bs4 import BeautifulSoup
 from database_class import StorageDatabase
-
-URL_NAME = 'https://www.usajobs.gov/?c=opportunities'
-
-
-
-def html_open(url_name):
-    """
-    Opens web page at url_name
-    Returns the soup of the whole page
-    """
-    page = requests.get(url_name)
-    return BeautifulSoup(page.content, "html.parser")
-
-
-def parse_overview(soup):
-    """
-    Parses the overview section of the individual announcement page
-    :return: dictionary of the overview items
-
-    """
-
-    overview = {}
-
-    for parameter in soup.find_all(class_="usajobs-joa-summary__item usajobs-joa-summary--beta__item"):
-        title_item = parameter.find("h5")
-        if title_item != None:
-            title = ("_".join(title_item.text.strip().split())).lower()
-            value = [item.text.strip() for item in parameter.find_all("p")]
-            overview.update({title: value[0]})
-    return overview
-
-def parse_card_header(soup):
-    """
-    Parses the overview section of the individual announcement page
-    :return: dictionary of the overview items
-
-    """
-    card_header = soup.find(class_="usajobs-joa-banner__body usajobs-joa-banner--pilot__body")
-
-    title_class = "usajobs-joa-banner__title"
-    title = card_header.find(class_=title_class).text.strip()
-    department_class = "usajobs-joa-banner__dept"
-    department = card_header.find(class_=department_class).text.strip()
-    agency_class = "usajobs-joa-banner__agency usajobs-joa-banner--v1-3__agency"
-    agency = card_header.find(class_=agency_class).text.strip()
-    # TODO: store in the database
-    return {"department" : department, "agency" : agency, "title" : title}
-
-def parse_requirements(soup):
-    """
-    Parses the Requirements section of of the individual announcement page.
-    Returns one-item dictionary with the key "requirements" and the list of requirements as value
-    """
-
-    requirements = []
-    requirements_section = soup.find('div', id="requirements")
-    reqs = requirements_section.find(class_="usajobs-list-bullets")
-    for req in reqs.find_all():
-        requirements.append(req.text.strip())
-    return {"Requirements": requirements}
-
-def parse_duties(soup):
-    """
-    Parses the Requirements section of of the individual announcement page.
-    Returns one-item dictionary with the key "requirements" and the list of requirements as value
-    """
-
-    duties = []
-    duties_section = soup.find('div', id="duties")
-    duty_list = duties_section.find(class_="usajobs-list-bullets")
-    if not duty_list == None:
-        for duty in duty_list.find_all():
-            duties.append((duty.text.strip(),hash(duty.text.strip())))
-        return {"Duties": duties}
-    else:
-        return {"Duties" : []}
-def parse_summary(soup):
-
-    summary_section = soup.find('div', id="summary")
-    summary_text_section = summary_section.find('p')
-    summary_text = summary_text_section.text.strip()
-
-    return {"Summary" : summary_text}
-
+from parse_items import *
+from url_open import *
 
 def parse_job_card(details, db):
 
-    job_card = {**parse_card_header(details), **parse_overview(details), **parse_summary(details)}
+    job_card = {**parse_card_header(details), **parse_overview(details),
+                **parse_requirements(details), **parse_duties(details), **parse_summary(details) }
     department_name = str(job_card['department'])
     agency_name = str(job_card['agency'])
     print(department_name)
     department_id = db.table_find_row('departments', 'name', department_name)
     if len(department_id) == 0:
-        department_id = db.table_add_row('departments', (department_name,) )
+        department_id = db.table_add_row('departments', {'name' : department_name})
     agency_id = db.table_find_row('agencies', 'name', agency_name)
     if len(agency_id) == 0:
-        agency_id = db.table_add_row('agencies', (agency_name, ) )
+        agency_id = db.table_add_row('agencies', {'name' : agency_name, 'department' : department_id['ID']} )
 
-    job_card.update(parse_requirements(details))
-    job_card.update(parse_duties(details))
+
     return job_card
 
 def parse_job_cards(url_name, db, limit=-1):
@@ -116,7 +34,11 @@ def parse_job_cards(url_name, db, limit=-1):
     jobs = []
     hashes = []
     duties_number = 0
+    j = 0
     while True:
+        j += 1
+        if j == limit:
+            break
         print("Page number = ",page_number)
         url_name_wpage = url_name + "&sort=enddate&page=" + str(page_number)
         print("scraping from url ", url_name_wpage)
@@ -146,7 +68,7 @@ def parse_job_cards(url_name, db, limit=-1):
     # v_counter.store_values("values.txt",count)
     return jobs
 
-def parse_sections(soup):
+def parse_sections(soup,limit = -1):
 
     """
     Top level parser, parses the page with the list of the sections opportunities are grouped to topics.
@@ -165,8 +87,11 @@ def parse_sections(soup):
     current_index = 0
 
     out_file = ""
+    i = 0
     for title in titles:
-
+        i += 1
+        if i == limit:
+            break
         class_name = title['class'][0]
 
         if class_name == class_of_category:
@@ -180,17 +105,18 @@ def parse_sections(soup):
             print(title_string)
             card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
             print("Parsing: ",card_url)
-            cards = parse_job_cards(card_url, db, 3)
+            cards = parse_job_cards(card_url, db, limit)
             sections[current_index][current_title].append({title.text.strip() : cards})
 
     db.sql_exec("SELECT * FROM departments", 's')
+    db.sql_exec("SELECT * FROM agencies", 's')
 
 
 if __name__ == "__main__":
 
     soup = html_open(URL_NAME)
     # soup = BeautifulSoup(file,"html-parser")
-    sections = parse_sections(soup)
+    sections = parse_sections(soup, 3)
 
 
 
