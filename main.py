@@ -1,27 +1,47 @@
 import requests
 from bs4 import BeautifulSoup
-from database_class import StorageDatabase
+from database_class import StorageDatabase, TABLE_LIST, TEXT_FIELDS
 from parse_items import *
 from url_open import *
 
-def parse_job_card(details, db):
+def parse_job_card(details, professional_area_id, db):
 
     job_card = {**parse_card_header(details), **parse_overview(details),
                 **parse_requirements(details), **parse_duties(details), **parse_summary(details) }
     department_name = str(job_card['department'])
     agency_name = str(job_card['agency'])
     print(department_name)
-    department_id = db.table_find_row('departments', 'name', department_name)
-    if len(department_id) == 0:
-        department_id = db.table_add_row('departments', {'name' : department_name})
-    agency_id = db.table_find_row('agencies', 'name', agency_name)
-    if len(agency_id) == 0:
-        agency_id = db.table_add_row('agencies', {'name' : agency_name, 'department' : department_id['ID']} )
+    department_id = db.table_update_row_return_id('departments', 'name', department_name, {'name' : department_name})
+    # department_id = db.table_find_row_return_id('departments', 'name', department_name)
+    # if department_id == 0:
+    #     department_id = db.table_add_row_return_id('departments', {'name' : department_name})
+    agency_id = db.table_update_row_return_id('agencies', 'name', agency_name, {'name' : agency_name, 'department' : department_id})
+    # agency_id = db.table_find_row_return_id('agencies', 'name', agency_name)
+    # if agency_id == 0:
+    #     agency_id = db.table_add_row_return_id('agencies', {'name' : agency_name, 'department' : department_id} )
 
+    job_card_record = {'name': job_card['title'],
+                       'agency_id': agency_id,
+                       'professional_area': professional_area_id}
 
+    for key, value in job_card.items():
+
+        if key in TABLE_LIST:
+            print(f"Updating table {key}")
+            item_id = db.table_find_row_return_id(key, 'text', value)
+            if item_id == 0:
+                item_id = db.table_add_row_return_id(key, {'text' : value})
+            job_card_record.update({key + '_id': item_id})
+        if key in TEXT_FIELDS:
+            job_card_record.update({key: value})
+
+    job_card_id = db.table_update_row_return_id('job_card', 'announcement_number',
+                                                job_card_record['announcement_number'],
+                                                job_card_record)
+    print("Job announcement card added/found , ID: ")
     return job_card
 
-def parse_job_cards(url_name, db, limit=-1):
+def parse_job_cards(url_name, db, professional_area, limit=-1):
     """
     Parses the page with list of the cards.
     Returns list of dictionaries (each card is represented by a dictionary)
@@ -53,14 +73,10 @@ def parse_job_cards(url_name, db, limit=-1):
 
             details_url = job_notice.find("a", href=True)["href"]
             details = html_open(details_url)
-            job_card = parse_job_card(details, db)
+            job_card = parse_job_card(details, professional_area, db)
 
             # v_counter.add_card(job_card)
             jobs.append(job_card )
-            for duty, duty_hash in job_card["Duties"]:
-                duties_number += 1
-                if duty_hash not in hashes:
-                    hashes.append(duty_hash)
 
         if number_of_cards < 25:
             break
@@ -83,7 +99,7 @@ def parse_sections(soup,limit = -1):
     class_of_prof_area = "usajobs-landing-find-opportunities__job-item"
     titles = soup.find_all("li",class_=[class_of_prof_area,class_of_category])
     sections = []
-    current_title = ""
+    category_title = ""
     current_index = 0
 
     out_file = ""
@@ -95,21 +111,32 @@ def parse_sections(soup,limit = -1):
         class_name = title['class'][0]
 
         if class_name == class_of_category:
-            current_title = title.text.strip()
-            print("Category title =",current_title)
-            sections.append({current_title:[]})
-            out_file += "\n\n" + current_title + "\n"
+            category_title = title.text.strip()
+            print("Category title =",category_title)
+
+            category_id = db.table_add_row_return_id('category',
+                                                    {'title': category_title })
+            sections.append({category_title:[]})
+            out_file += "\n\n" + category_title + "\n"
             current_index = len(sections)-1
         elif class_name == class_of_prof_area:
-            title_string = title.text.strip()
-            print(title_string)
+            professional_area = title.text.strip()
+            print(professional_area)
             card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
             print("Parsing: ",card_url)
-            cards = parse_job_cards(card_url, db, limit)
-            sections[current_index][current_title].append({title.text.strip() : cards})
+            professional_area_id = db.table_add_row_return_id('professional_area',
+                                                              {'title': professional_area,
+                                                               'category_id': category_id})
+
+            cards = parse_job_cards(card_url, db, professional_area_id ,limit)
+            sections[current_index][category_title].append({title.text.strip() : cards})
 
     db.sql_exec("SELECT * FROM departments", 's')
     db.sql_exec("SELECT * FROM agencies", 's')
+    db.sql_exec("SELECT * FROM promotion_potential", 's')
+    db.sql_exec("SELECT * FROM trust_determination_process", 's')
+    db.sql_exec("SELECT * FROM security_clearance", 's')
+    db.sql_exec("SELECT * FROM job_card", 's')
 
 
 if __name__ == "__main__":

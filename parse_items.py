@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import re
 
 
 def parse_overview(soup):
@@ -46,7 +47,7 @@ def parse_requirements(soup):
     reqs = requirements_section.find(class_="usajobs-list-bullets")
     for req in reqs.find_all():
         requirements.append(req.text.strip())
-    return {"Requirements": requirements}
+    return {"requirements": " ".join(requirements)}
 
 def parse_duties(soup):
     """
@@ -59,14 +60,14 @@ def parse_duties(soup):
     duty_list = duties_section.find(class_="usajobs-list-bullets")
     if not duty_list == None:
         for duty in duty_list.find_all():
-            duties.append((duty.text.strip(),hash(duty.text.strip())))
-        return {"Duties": duties}
+            duties.append(duty.text.strip())
+        return {"duties": " ".join(duties)}
     else:
-        return {"Duties" : []}
+        return {"duties" : []}
 def parse_summary(soup):
 
     summary_section = soup.find('div', id="summary")
     summary_text_section = summary_section.find('p')
     summary_text = summary_text_section.text.strip()
 
-    return {"Summary" : summary_text}
+    return {"summary" : summary_text}
