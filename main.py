@@ -1,28 +1,38 @@
 import requests
+import argparse
 from bs4 import BeautifulSoup
+import sys
 from database_class import StorageDatabase, TABLE_LIST, TEXT_FIELDS
 from parse_items import *
 from url_open import *
+from tests import *
 
 def parse_job_card(details, professional_area_id, db):
+    """
+    Parse individual page of the job announcement
+    Store the proceeds to the database
+    """
 
+    # Parsing the records from the page into the job_card dictionary
     job_card = {**parse_card_header(details), **parse_overview(details),
                 **parse_requirements(details), **parse_duties(details), **parse_summary(details) }
+
+    # Getting the agency and department, if new store to the database
     department_name = str(job_card['department'])
     agency_name = str(job_card['agency'])
     print(department_name)
     department_id = db.table_update_row_return_id('departments', 'name', department_name, {'name' : department_name})
-    # department_id = db.table_find_row_return_id('departments', 'name', department_name)
-    # if department_id == 0:
-    #     department_id = db.table_add_row_return_id('departments', {'name' : department_name})
     agency_id = db.table_update_row_return_id('agencies', 'name', agency_name, {'name' : agency_name, 'department' : department_id})
-    # agency_id = db.table_find_row_return_id('agencies', 'name', agency_name)
-    # if agency_id == 0:
-    #     agency_id = db.table_add_row_return_id('agencies', {'name' : agency_name, 'department' : department_id} )
 
+
+    # Creating the record for writing it into the database
     job_card_record = {'name': job_card['title'],
                        'agency_id': agency_id,
                        'professional_area': professional_area_id}
+
+    # Filling the record with the items parsed from the webpage.
+    # If the item has to be stored in the separate table, the record in that table is made and
+    # its ID is stored in the job_card_items with corresponding key.
 
     for key, value in job_card.items():
 
@@ -35,20 +45,26 @@ def parse_job_card(details, professional_area_id, db):
         if key in TEXT_FIELDS:
             job_card_record.update({key: value})
 
+    # Writing the record into the database
     job_card_id = db.table_update_row_return_id('job_card', 'announcement_number',
                                                 job_card_record['announcement_number'],
                                                 job_card_record)
-    print("Job announcement card added/found , ID: ")
+
+    print(f"Job announcement card added/found , ID: {job_card_id}")
     return job_card
 
-def parse_job_cards(url_name, db, professional_area, limit=-1):
+def parse_job_cards(url_name, db, professional_area_id, limit=-1):
     """
     Parses the page with list of the cards.
     Returns list of dictionaries (each card is represented by a dictionary)
     """
-    # v_counter = Value_Counter(OVERVIEW_ITEMS)
+    # v_counter = Value_Counter(OVERVIEW_ITEMS) - initial data study tool
+
     soup = html_open(url_name)
     count = int(soup.find(class_="usajobs-search-controls__results-count").text.split()[0].strip())
+    old_count = db.table_get_value('professional_area', professional_area_id, 'num_records')['num_records']
+    if count != old_count:
+        print("New records found on the page")
     print("Cards on page: ",count)
     page_number = 1
     jobs = []
@@ -57,7 +73,7 @@ def parse_job_cards(url_name, db, professional_area, limit=-1):
     j = 0
     while True:
         j += 1
-        if j == limit:
+        if j == limit: #limiting output for debugging
             break
         print("Page number = ",page_number)
         url_name_wpage = url_name + "&sort=enddate&page=" + str(page_number)
@@ -73,14 +89,14 @@ def parse_job_cards(url_name, db, professional_area, limit=-1):
 
             details_url = job_notice.find("a", href=True)["href"]
             details = html_open(details_url)
-            job_card = parse_job_card(details, professional_area, db)
+            job_card = parse_job_card(details, professional_area_id, db)
 
             # v_counter.add_card(job_card)
             jobs.append(job_card )
 
         if number_of_cards < 25:
             break
-    print(f"Total different duties found: {duties_number} from them unique {len(hashes)} ")
+
     # v_counter.store_values("values.txt",count)
     return jobs
 
@@ -114,8 +130,8 @@ def parse_sections(soup,limit = -1):
             category_title = title.text.strip()
             print("Category title =",category_title)
 
-            category_id = db.table_add_row_return_id('category',
-                                                    {'title': category_title })
+            category_id = db.table_update_row_return_id('category', 'title', category_title,
+                                                        {'title': category_title })
             sections.append({category_title:[]})
             out_file += "\n\n" + category_title + "\n"
             current_index = len(sections)-1
@@ -124,26 +140,42 @@ def parse_sections(soup,limit = -1):
             print(professional_area)
             card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
             print("Parsing: ",card_url)
-            professional_area_id = db.table_add_row_return_id('professional_area',
-                                                              {'title': professional_area,
-                                                               'category_id': category_id})
+            professional_area_id = db.table_update_row_return_id('professional_area', 'title',
+                                                                 professional_area,
+                                                                {'title': professional_area,
+                                                                'category_id': category_id})
 
             cards = parse_job_cards(card_url, db, professional_area_id ,limit)
             sections[current_index][category_title].append({title.text.strip() : cards})
 
-    db.sql_exec("SELECT * FROM departments", 's')
-    db.sql_exec("SELECT * FROM agencies", 's')
-    db.sql_exec("SELECT * FROM promotion_potential", 's')
-    db.sql_exec("SELECT * FROM trust_determination_process", 's')
-    db.sql_exec("SELECT * FROM security_clearance", 's')
+    # db.sql_exec("SELECT * FROM departments", 's')
+    # db.sql_exec("SELECT * FROM agencies", 's')
+    # db.sql_exec("SELECT * FROM promotion_potential", 's')
+    # db.sql_exec("SELECT * FROM trust_determination_process", 's')
+    # db.sql_exec("SELECT * FROM security_clearance", 's')
     db.sql_exec("SELECT * FROM job_card", 's')
 
+def main():
+
+    sys.
+    try:
+        soup = html_open(URL_NAME)
+    except FileNotFoundError as er:
+        print(f"Failed to open URL, error : {er}")
+        return
+        # soup = BeautifulSoup(file,"html-parser")
+    sections = parse_sections(soup, 3)
 
 if __name__ == "__main__":
 
-    soup = html_open(URL_NAME)
-    # soup = BeautifulSoup(file,"html-parser")
-    sections = parse_sections(soup, 3)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-l', type=int, default=0)
+    args = parser.parse_args()
+    print(args.l)
+    # tests()
+    # main()
+
+
 
 
 
