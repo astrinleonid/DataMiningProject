@@ -153,11 +153,11 @@ def parse_sections(soup,limit = -1):
     # db.sql_exec("SELECT * FROM promotion_potential", 's')
     # db.sql_exec("SELECT * FROM trust_determination_process", 's')
     # db.sql_exec("SELECT * FROM security_clearance", 's')
-    db.sql_exec("SELECT * FROM job_card", 's')
+    # db.sql_exec("SELECT * FROM job_card", 's')
+    db.db_commit()
 
 def main():
 
-    sys.
     try:
         soup = html_open(URL_NAME)
     except FileNotFoundError as er:
