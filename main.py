@@ -1,46 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
+from database_class import StorageDatabase
 
 URL_NAME = 'https://www.usajobs.gov/?c=opportunities'
-OVERVIEW_ITEMS = ('pay_scale_&_grade',
-                'telework_eligible',
-                'travel_required',
-                'relocation_expenses_reimbursed',
-                'appointment_type',
-                'work_schedule',
-                'service',
-                'promotion_potential',
-                'job_family_(series)',
-                'supervisory_status',
-                'security_clearance',
-                'drug_test',
-                'position_sensitivity_and_risk',
-                'trust_determination_process')
-
-
-class Value_Counter:
-
-    def __init__(self, key_list):
-        self.__item_counter__ = {}
-        for key in key_list:
-            self.__item_counter__.update({key : []})
-
-    def add_card(self, card):
-        for key, value in card.items():
-            if key in OVERVIEW_ITEMS:
-                if value not in self.__item_counter__[key]:
-                    self.__item_counter__[key].append(value)
-
-    def store_values(self,filename, no_records):
-
-        with open(filename, 'a') as file:
-            file.write("\n\n\nTotally " + str(no_records) + "records analysed\n")
-            for key, value in self.__item_counter__.items():
-                file.write("\n" + key + "  Take " + str(len(value)) + " values :  " + str(value))
-
-
-
-
 
 
 
@@ -84,8 +46,8 @@ def parse_card_header(soup):
     department = card_header.find(class_=department_class).text.strip()
     agency_class = "usajobs-joa-banner__agency usajobs-joa-banner--v1-3__agency"
     agency = card_header.find(class_=agency_class).text.strip()
-
-    return {"Department" : department, "Agency" : agency, "Title" : title}
+    # TODO: store in the database
+    return {"department" : department, "agency" : agency, "title" : title}
 
 def parse_requirements(soup):
     """
@@ -124,19 +86,29 @@ def parse_summary(soup):
     return {"Summary" : summary_text}
 
 
-def parse_job_card(details):
+def parse_job_card(details, db):
 
     job_card = {**parse_card_header(details), **parse_overview(details), **parse_summary(details)}
+    department_name = str(job_card['department'])
+    agency_name = str(job_card['agency'])
+    print(department_name)
+    department_id = db.table_find_row('departments', 'name', department_name)
+    if len(department_id) == 0:
+        department_id = db.table_add_row('departments', (department_name,) )
+    agency_id = db.table_find_row('agencies', 'name', agency_name)
+    if len(agency_id) == 0:
+        agency_id = db.table_add_row('agencies', (agency_name, ) )
+
     job_card.update(parse_requirements(details))
     job_card.update(parse_duties(details))
     return job_card
 
-def parse_job_cards(url_name,limit=-1):
+def parse_job_cards(url_name, db, limit=-1):
     """
     Parses the page with list of the cards.
     Returns list of dictionaries (each card is represented by a dictionary)
     """
-    v_counter = Value_Counter(OVERVIEW_ITEMS)
+    # v_counter = Value_Counter(OVERVIEW_ITEMS)
     soup = html_open(url_name)
     count = int(soup.find(class_="usajobs-search-controls__results-count").text.split()[0].strip())
     print("Cards on page: ",count)
@@ -159,9 +131,9 @@ def parse_job_cards(url_name,limit=-1):
 
             details_url = job_notice.find("a", href=True)["href"]
             details = html_open(details_url)
-            job_card = parse_job_card(details)
+            job_card = parse_job_card(details, db)
 
-            v_counter.add_card(job_card)
+            # v_counter.add_card(job_card)
             jobs.append(job_card )
             for duty, duty_hash in job_card["Duties"]:
                 duties_number += 1
@@ -171,7 +143,7 @@ def parse_job_cards(url_name,limit=-1):
         if number_of_cards < 25:
             break
     print(f"Total different duties found: {duties_number} from them unique {len(hashes)} ")
-    v_counter.store_values("values.txt",count)
+    # v_counter.store_values("values.txt",count)
     return jobs
 
 def parse_sections(soup):
@@ -181,32 +153,37 @@ def parse_sections(soup):
     Return the list of the dictionaries: Name of the section as key, dictionary of embedded sections as value.
     Each embedded dictionary contains subsection names as keys, list of cards as value
     """
+
+    db = StorageDatabase()
+
     titles_section = soup.find("div",class_="usajobs-landing-find-opportunities__section-container")
-    class_of_title = "usajobs-landing-find-opportunities__section-title"
-    class_of_item = "usajobs-landing-find-opportunities__job-item"
-    titles = soup.find_all("li",class_=[class_of_item,class_of_title])
+    class_of_category = "usajobs-landing-find-opportunities__section-title"
+    class_of_prof_area = "usajobs-landing-find-opportunities__job-item"
+    titles = soup.find_all("li",class_=[class_of_prof_area,class_of_category])
     sections = []
     current_title = ""
     current_index = 0
+
     out_file = ""
     for title in titles:
 
         class_name = title['class'][0]
 
-        if class_name == class_of_title:
+        if class_name == class_of_category:
             current_title = title.text.strip()
-            print("Section title =",current_title)
+            print("Category title =",current_title)
             sections.append({current_title:[]})
             out_file += "\n\n" + current_title + "\n"
             current_index = len(sections)-1
-        elif class_name == class_of_item:
+        elif class_name == class_of_prof_area:
             title_string = title.text.strip()
             print(title_string)
             card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
             print("Parsing: ",card_url)
-            cards = parse_job_cards(card_url)
+            cards = parse_job_cards(card_url, db, 3)
             sections[current_index][current_title].append({title.text.strip() : cards})
 
+    db.sql_exec("SELECT * FROM departments", 's')
 
 
 if __name__ == "__main__":

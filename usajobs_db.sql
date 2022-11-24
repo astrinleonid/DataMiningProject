@@ -14,8 +14,8 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema mydb
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8 ;
-USE `mydb` ;
+-- CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8 ;
+-- USE mydb ;
 
 -- -----------------------------------------------------
 -- Table `mydb`.`agencies`
@@ -88,12 +88,12 @@ CREATE TABLE IF NOT EXISTS `mydb`.`job_card` (
   `name` VARCHAR(100) NOT NULL COMMENT 'Title of the position\n',
   `agency_id` INT NOT NULL COMMENT 'Agency ID refers to the agency in the table agencies\n',
   `section` INT NULL COMMENT 'Refers to the professional field (e.g. Chemistry, Computer science) as listed on the starting page',
-  `summary` VARCHAR(4000) NULL COMMENT 'Text of the Summary section \n',
-  `duties` VARCHAR(4000) NULL COMMENT 'Text of the duties section\n',
+  `summary` TEXT NULL COMMENT 'Text of the Summary section \n',
+  `duties` TEXT NULL COMMENT 'Text of the duties section\n',
   `requirements` INT NULL COMMENT 'Refers to the table with Requirement section contents\n',
-  `evaluation` VARCHAR(3000) NULL COMMENT ' text of the Evaluation section\n',
-  `req_docs` VARCHAR(3000) NULL COMMENT ' text of the Required documents section',
-  `how_to_apply` VARCHAR(3000) NULL COMMENT ' text of the How to apply section',
+  `evaluation` TEXT NULL COMMENT ' text of the Evaluation section\n',
+  `req_docs` TEXT NULL COMMENT ' text of the Required documents section',
+  `how_to_apply` TEXT NULL COMMENT ' text of the How to apply section',
   `start_date` DATETIME NULL COMMENT 'Date of the opening of the position',
   `end_date` DATETIME NULL COMMENT 'Date of the closing of the position',
   `start_salary` INT NULL COMMENT 'Lower value in the salary range as indicated in overview',
@@ -421,4 +421,4 @@ ENGINE = InnoDB;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS
