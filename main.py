@@ -20,8 +20,9 @@ def parse_job_card(details, professional_area_id, db):
     # Getting the agency and department, if new store to the database
     department_name = str(job_card['department'])
     agency_name = str(job_card['agency'])
-    print(department_name)
+    print(f"Department: {department_name}")
     department_id = db.table_update_row_return_id('departments', 'name', department_name, {'name' : department_name})
+    print(f"Agency: {agency_name}")
     agency_id = db.table_update_row_return_id('agencies', 'name', agency_name, {'name' : agency_name, 'department' : department_id})
 
 
@@ -53,6 +54,14 @@ def parse_job_card(details, professional_area_id, db):
     print(f"Job announcement card added/found , ID: {job_card_id}")
     return job_card
 
+def open_prof_area_page(url_name, old_count):
+    soup = html_open(url_name)
+    count = int(soup.find(class_="usajobs-search-controls__results-count").text.split()[0].strip())
+    changes_on_page = count != old_count
+    if changes_on_page:
+        print("New records found on the page")
+    return (soup, count, changes_on_page)
+
 def parse_job_cards(url_name, db, professional_area_id, limit=-1):
     """
     Parses the page with list of the cards.
@@ -60,22 +69,21 @@ def parse_job_cards(url_name, db, professional_area_id, limit=-1):
     """
     # v_counter = Value_Counter(OVERVIEW_ITEMS) - initial data study tool
 
-    soup = html_open(url_name)
-    count = int(soup.find(class_="usajobs-search-controls__results-count").text.split()[0].strip())
     old_count = db.table_get_value('professional_area', professional_area_id, 'num_records')['num_records']
-    if count != old_count:
-        print("New records found on the page")
+    (soup, count, changes_on_page) = open_prof_area_page(url_name, old_count)
     print("Cards on page: ",count)
+
     page_number = 1
     jobs = []
-    hashes = []
-    duties_number = 0
     j = 0
+    details_urls = []
     while True:
         j += 1
         if j == limit: #limiting output for debugging
             break
         print("Page number = ",page_number)
+
+
         url_name_wpage = url_name + "&sort=enddate&page=" + str(page_number)
         print("scraping from url ", url_name_wpage)
         soup = html_open(url_name_wpage)
@@ -83,19 +91,26 @@ def parse_job_cards(url_name, db, professional_area_id, limit=-1):
         number_of_cards = len(job_notices)
         print("Cards on this page: ",number_of_cards)
         page_number += 1
+
         for i, job_notice in enumerate(job_notices):
             if i == limit: #limiting output for debugging
                 break
-
             details_url = job_notice.find("a", href=True)["href"]
-            details = html_open(details_url)
-            job_card = parse_job_card(details, professional_area_id, db)
-
-            # v_counter.add_card(job_card)
-            jobs.append(job_card )
+            details_urls.append(details_url)
 
         if number_of_cards < 25:
             break
+
+    print("List of urls formed, starting parsing")
+    print(details_urls)
+
+    for url in details_urls:
+        details = html_open(url)
+        job_card = parse_job_card(details, professional_area_id, db)
+        # v_counter.add_card(job_card)
+        jobs.append(job_card)
+
+
 
     # v_counter.store_values("values.txt",count)
     return jobs
@@ -153,10 +168,10 @@ def parse_sections(soup,limit = -1):
     # db.sql_exec("SELECT * FROM promotion_potential", 's')
     # db.sql_exec("SELECT * FROM trust_determination_process", 's')
     # db.sql_exec("SELECT * FROM security_clearance", 's')
-    # db.sql_exec("SELECT * FROM job_card", 's')
+    db.sql_exec("SELECT * FROM job_card", 's')
     db.db_commit()
 
-def main():
+def main(limit):
 
     try:
         soup = html_open(URL_NAME)
@@ -164,16 +179,21 @@ def main():
         print(f"Failed to open URL, error : {er}")
         return
         # soup = BeautifulSoup(file,"html-parser")
-    sections = parse_sections(soup, 3)
+    sections = parse_sections(soup, limit)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-l', type=int, default=0)
+    parser.add_argument('-s', dest='section_name', type=str, default='')
+    parser.add_argument('-l', type=int, default=-1)
+    parser.add_argument('--check', action='store_true', default=False)
+
     args = parser.parse_args()
     print(args.l)
+    print(args.section_name)
+    print(args.check)
     # tests()
-    # main()
+    main(args.l)
 
 
 
