@@ -13,20 +13,28 @@ TABLE_LIST = {
     'trust_determination_process',
     'requirements',
     'duties',
+    'summary',
+    'pay_scale_&_grade',
+    'job_family_(series)',
 
 }
-# 'job_family_(series)',
-# 'pay_scale_&_grade',
-# 'summary',
+
 
 # 'open_closing_dates',
 
 TEXT_FIELDS = """
     
     'salary',
-    'announcement_number'
+    'announcement_number',
+    'open_closing_dates'
  """
-    
+
+def text_prepare(value):
+
+    if type(value) == str:
+        return value.replace('"',"'").strip()
+    else:
+        return value
 
 class StorageDatabase:
 
@@ -61,7 +69,11 @@ class StorageDatabase:
 
         with self.__connection__.cursor() as cursor:
             cursor.execute(self.__USE__)
-            cursor.execute(sql)
+            try:
+                cursor.execute(sql)
+            except pymysql.err.ProgrammingError as er:
+                print(f"\n\n SQL failed on \n {sql}")
+                raise pymysql.err.ProgrammingError(er)
             result = cursor.fetchall()
             res = []
             for item in result:
@@ -79,7 +91,7 @@ class StorageDatabase:
             names.append(key)
             values.append(value)
         col_names = "".join([f'{name}, ' for name in names]).strip(', ')
-        col_values = "".join([f'"{value}", ' for value in values]).strip(', ')
+        col_values = "".join([f'"{text_prepare(value)}", ' for value in values]).strip(', ')
         sql = f"INSERT INTO {table} ({col_names}) VALUES ({col_values})"
 
         self.sql_exec(sql)
@@ -112,12 +124,20 @@ class StorageDatabase:
 
     def __table_find_row__(self, table, column, value):
 
-        sql = f'SELECT ID FROM {table}  WHERE {column} = "{value}"'
+        sql = f'SELECT ID FROM {table}  WHERE {column} = "{text_prepare(value)}"'
         res = self.sql_exec(sql)
         return res
 
     def table_get_value(self, table, ID, column):
-        sql = f'SELECT {column} FROM {table}  WHERE ID = ID'
+        sql = f'SELECT {column} FROM {table}  WHERE ID = {ID}'
+        res = self.sql_exec(sql)
+        if len(res) > 0:
+            return res[0]
+        else:
+            return []
+
+    def table_update_row(self, table, ID, column, value):
+        sql = f'UPDATE {table} SET {column} = {value} WHERE ID = ID'
         res = self.sql_exec(sql)
         if len(res) > 0:
             return res[0]

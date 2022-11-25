@@ -54,46 +54,37 @@ def parse_job_card(details, professional_area_id, db):
     print(f"Job announcement card added/found , ID: {job_card_id}")
     return job_card
 
-def open_prof_area_page(url_name, old_count):
+def get_card_list_at_prof_area(url_name, old_count, limit):
+
     soup = html_open(url_name)
     count = int(soup.find(class_="usajobs-search-controls__results-count").text.split()[0].strip())
     changes_on_page = count != old_count
+    print(f"Records in database: {old_count}, records on this page: {count}")
     if changes_on_page:
         print("New records found on the page")
-    return (soup, count, changes_on_page)
 
-def parse_job_cards(url_name, db, professional_area_id, limit=-1):
-    """
-    Parses the page with list of the cards.
-    Returns list of dictionaries (each card is represented by a dictionary)
-    """
-    # v_counter = Value_Counter(OVERVIEW_ITEMS) - initial data study tool
-
-    old_count = db.table_get_value('professional_area', professional_area_id, 'num_records')['num_records']
-    (soup, count, changes_on_page) = open_prof_area_page(url_name, old_count)
-    print("Cards on page: ",count)
+    print("Cards on page: ", count)
 
     page_number = 1
-    jobs = []
+
     j = 0
     details_urls = []
     while True:
         j += 1
-        if j == limit: #limiting output for debugging
+        if j == limit:  # limiting output for debugging
             break
-        print("Page number = ",page_number)
-
+        print("Page number = ", page_number)
 
         url_name_wpage = url_name + "&sort=enddate&page=" + str(page_number)
         print("scraping from url ", url_name_wpage)
         soup = html_open(url_name_wpage)
         job_notices = soup.find_all(class_="usajobs-search-result--card")
         number_of_cards = len(job_notices)
-        print("Cards on this page: ",number_of_cards)
+        print("Cards on this page: ", number_of_cards)
         page_number += 1
 
         for i, job_notice in enumerate(job_notices):
-            if i == limit: #limiting output for debugging
+            if i == limit:  # limiting output for debugging
                 break
             details_url = job_notice.find("a", href=True)["href"]
             details_urls.append(details_url)
@@ -103,7 +94,21 @@ def parse_job_cards(url_name, db, professional_area_id, limit=-1):
 
     print("List of urls formed, starting parsing")
     print(details_urls)
+    return (details_urls, count)
 
+
+def parse_job_cards(url_name, db, professional_area_id, limit=-1):
+    """
+    Parses the page with list of the cards.
+    Returns list of dictionaries (each card is represented by a dictionary)
+    """
+    # v_counter = Value_Counter(OVERVIEW_ITEMS) - initial data study tool
+
+    old_count = db.table_get_value('professional_area', professional_area_id, 'num_records')['num_records']
+
+    (details_urls, count) = get_card_list_at_prof_area(url_name, old_count, limit)
+
+    jobs = []
     for url in details_urls:
         details = html_open(url)
         job_card = parse_job_card(details, professional_area_id, db)
@@ -113,7 +118,7 @@ def parse_job_cards(url_name, db, professional_area_id, limit=-1):
 
 
     # v_counter.store_values("values.txt",count)
-    return jobs
+    return (jobs, count)
 
 def parse_sections(soup,limit = -1):
 
@@ -160,7 +165,10 @@ def parse_sections(soup,limit = -1):
                                                                 {'title': professional_area,
                                                                 'category_id': category_id})
 
-            cards = parse_job_cards(card_url, db, professional_area_id ,limit)
+            (cards, count) = parse_job_cards(card_url, db, professional_area_id ,limit)
+            professional_area_id = db.table_update_row('professional_area',
+                                                    professional_area_id, 'num_records', count)
+
             sections[current_index][category_title].append({title.text.strip() : cards})
 
     # db.sql_exec("SELECT * FROM departments", 's')
