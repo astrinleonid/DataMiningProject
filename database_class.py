@@ -1,5 +1,8 @@
 import pymysql
-FILE = "usajobs_db.sql"
+SQL_BUILDER = {
+'new' : "usajobs_db.sql",
+'keep' : "usajobs_db_keepdb.sql"}
+
 TABLE_LIST = {
 
     'telework_eligible',

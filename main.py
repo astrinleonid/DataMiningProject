@@ -97,30 +97,8 @@ def get_card_list_at_prof_area(url_name, old_count, limit):
     return (details_urls, count)
 
 
-def parse_job_cards(url_name, db, professional_area_id, limit=-1):
-    """
-    Parses the page with list of the cards.
-    Returns list of dictionaries (each card is represented by a dictionary)
-    """
-    # v_counter = Value_Counter(OVERVIEW_ITEMS) - initial data study tool
 
-    old_count = db.table_get_value('professional_area', professional_area_id, 'num_records')['num_records']
-
-    (details_urls, count) = get_card_list_at_prof_area(url_name, old_count, limit)
-
-    jobs = []
-    for url in details_urls:
-        details = html_open(url)
-        job_card = parse_job_card(details, professional_area_id, db)
-        # v_counter.add_card(job_card)
-        jobs.append(job_card)
-
-
-
-    # v_counter.store_values("values.txt",count)
-    return (jobs, count)
-
-def parse_sections(soup,limit = -1):
+def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
 
     """
     Top level parser, parses the page with the list of the sections opportunities are grouped to topics.
@@ -128,7 +106,7 @@ def parse_sections(soup,limit = -1):
     Each embedded dictionary contains subsection names as keys, list of cards as value
     """
 
-    db = StorageDatabase()
+    db = StorageDatabase(SQL_BUILDER[db_mode])
 
     titles_section = soup.find("div",class_="usajobs-landing-find-opportunities__section-container")
     class_of_category = "usajobs-landing-find-opportunities__section-title"
@@ -142,8 +120,8 @@ def parse_sections(soup,limit = -1):
     i = 0
     for title in titles:
         i += 1
-        if i == limit:
-            break
+        # if i == limit:
+        #     break
         class_name = title['class'][0]
 
         if class_name == class_of_category:
@@ -158,6 +136,8 @@ def parse_sections(soup,limit = -1):
         elif class_name == class_of_prof_area:
             professional_area = title.text.strip()
             print(professional_area)
+            if len(prof_area_param) > 0 and prof_area_param != professional_area:
+                continue
             card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
             print("Parsing: ",card_url)
             professional_area_id = db.table_update_row_return_id('professional_area', 'title',
@@ -165,11 +145,21 @@ def parse_sections(soup,limit = -1):
                                                                 {'title': professional_area,
                                                                 'category_id': category_id})
 
-            (cards, count) = parse_job_cards(card_url, db, professional_area_id ,limit)
+            old_count = db.table_get_value('professional_area', professional_area_id, 'num_records')['num_records']
+
+            (details_urls, count) = get_card_list_at_prof_area(card_url, old_count, limit)
+
+            jobs = []
+            for url in details_urls:
+                details = html_open(url)
+                job_card = parse_job_card(details, professional_area_id, db)
+                # v_counter.add_card(job_card)
+                jobs.append(job_card)
+
             professional_area_id = db.table_update_row('professional_area',
                                                     professional_area_id, 'num_records', count)
 
-            sections[current_index][category_title].append({title.text.strip() : cards})
+            sections[current_index][category_title].append({title.text.strip() : jobs})
 
     # db.sql_exec("SELECT * FROM departments", 's')
     # db.sql_exec("SELECT * FROM agencies", 's')
@@ -179,7 +169,7 @@ def parse_sections(soup,limit = -1):
     db.sql_exec("SELECT * FROM job_card", 's')
     db.db_commit()
 
-def main(limit):
+def main(limit, prof_area_param, db_mode):
 
     try:
         soup = html_open(URL_NAME)
@@ -187,13 +177,14 @@ def main(limit):
         print(f"Failed to open URL, error : {er}")
         return
         # soup = BeautifulSoup(file,"html-parser")
-    sections = parse_sections(soup, limit)
+    sections = parse_sections(soup, limit, prof_area_param)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', dest='section_name', type=str, default='')
     parser.add_argument('-l', type=int, default=-1)
+    parser.add_argument('-m', type=int, default=-1) # TODO: make selector
     parser.add_argument('--check', action='store_true', default=False)
 
     args = parser.parse_args()
@@ -201,7 +192,7 @@ if __name__ == "__main__":
     print(args.section_name)
     print(args.check)
     # tests()
-    main(args.l)
+    main(args.l, args.section_name, 'keep')
 
 
 
