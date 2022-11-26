@@ -123,7 +123,13 @@ class StorageDatabase:
 
 
     def table_update_row_return_id(self, table, column, value, data_items):
+        """
+        If the row with given value in given column does not exist,
+        adds the row to the table with the given set of values and returns its ID.
+        Otherwise returns the ID of the existing row.
+        Does NOT update existing rows
 
+        """
         row = self.__table_find_row__(table, column, value)
         if len(row) > 0:
             return row[0]['ID']
@@ -134,12 +140,18 @@ class StorageDatabase:
 
 
     def __table_find_row__(self, table, column, value):
-
+        """
+        Finds row in the table with given value in the given row, returns ID
+        """
         sql = f'SELECT ID FROM {table}  WHERE {column} = "{text_prepare(value)}"'
         res = self.sql_exec(sql)
         return res
 
     def table_get_value(self, table, ID, column):
+        """
+        Returns value in the row by ID
+
+        """
         sql = f'SELECT {column} FROM {table}  WHERE ID = {ID}'
         res = self.sql_exec(sql)
         if len(res) > 0:
@@ -148,10 +160,17 @@ class StorageDatabase:
             return []
 
     def current_no_of_records(self):
+        """
+        Returns the number of the job announcements recorded in the database at the moment
+        """
         sql = f"SELECT MAX(ID) AS ID FROM job_card"
         return self.sql_exec(sql)[0]['ID']
 
     def table_update_row(self, table, ID, column, value):
+        """
+        Updates the row with the given value by ID
+
+        """
         sql = f'UPDATE {table} SET {column} = {value} WHERE ID = {ID}'
         res = self.sql_exec(sql)
         if len(res) > 0:
