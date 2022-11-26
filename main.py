@@ -38,12 +38,29 @@ def parse_job_card(details, professional_area_id, db):
     for key, value in job_card.items():
 
         if key in TABLE_LIST:
-            print(f"Updating table {key}")
+            # print(f"Updating table {key}")
             item_id = db.table_update_row_return_id(key, 'text', value, {'text' : value})
 
             job_card_record.update({key + '_id': item_id})
         if key in TEXT_FIELDS:
             job_card_record.update({key: value})
+
+        if key in NUMERIC_FIELDS:
+            try:
+                numeric_value = int(value)
+            except ValueError as er:
+                raise ValueError(f"""The field {key} is supposed to be numeric, \n"
+                                      non numeric received : {value}""")
+            job_card_record.update({key: value})
+
+        if key in BINARY_FIELDS:
+            binary_values = {'Yes' : 1 ,'No' : 0}
+            if value not in binary_values:
+                raise ValueError(f"""The field {key} is supposed to be binary,  , \n"
+                                      Yes/No expected, different value received : {value}""")
+            job_card_record.update({key: binary_values[value]})
+
+
 
     # Writing the record into the database
     job_card_id = db.table_update_row_return_id('job_card', 'announcement_number',

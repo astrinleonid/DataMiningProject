@@ -17,8 +17,8 @@ TABLE_LIST = {
     'requirements',
     'duties',
     'summary',
-    'pay_scale_&_grade',
-    'job_family_(series)',
+    'pay_scale_grade',
+    'job_family_series',
 
 }
 
@@ -31,6 +31,19 @@ TEXT_FIELDS = """
     'announcement_number',
     'open_closing_dates'
  """
+
+NUMERIC_FIELDS = """
+        'control_number'
+
+"""
+
+BINARY_FIELDS = """
+    'supervisory_status',
+    'drug_test'
+
+"""
+
+
 
 def text_prepare(value):
     """
