@@ -5,22 +5,54 @@ DATES_TEXT = """
 12/01/2021 to 11/30/2022
 """
 
-def parce_salary_text(text):
+JOB_FAMILY_SERIES = """
+0801 General Engineering
+"""
+TRAVEL_REQUIRED = {
+'Occasional travel - Travel required up to 15% of the time.' : ('Yes',15),
+'25% or less - Varies' : ('Yes', 25),
+'Occasional travel - You may be expected to travel for this position.' : ('Yes',20),
+'Occasional travel - You may be expected to travel 1-5 days per month for this position.' : ('Yes', 20)
+'Not required' : ('No', 0)
+}
 
+def parce_salary_text(text):
+    """
+    Receives the text of the salary field and returns
+    a tuple of two integers, representing minimum and maximum salary in dollars
+    """
     pass
 
 def parce_dates_text(text):
+    """
+    Receives the text of the dates field and returns
+    a tuple of two strings recognized by SQL as date(in YYYY-MM-DD format)
+    """
+    pass
+
+def parse_job_series(text):
+    """
+    Receives the text of the job series text field and returns a values
+    of the numeric code and a name as a tuple (integer, string)
+    """
 
     pass
 
-def parce_pay_scale_grade_text(text):
-
+def parse_travel_requirements(text):
+    """
+    Receives the text of the travel_required text field and returns a
+    tuple of (boolean, integer) representing general requirement for the travel
+    and time percentage (if it can be derived)
+    """
     pass
 
 if __name__ == '__main__':
 
     assert parce_salary_text(SALARY_TEXT) == (56205, 152058)
-    assert parce_dates_text(DATES_TEXT) == ()
+    assert parce_dates_text(DATES_TEXT) == ('2021-12-01', '2022-11-30')
+    assert parse_job_series(JOB_FAMILY_SERIES) == (801,'General Engineering')
+    for key, value in TRAVEL_REQUIRED:
+        assert parse_travel_requirements(key) == value
 
 
 

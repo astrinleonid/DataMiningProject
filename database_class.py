@@ -7,7 +7,7 @@ TABLE_LIST = {
 
     'telework_eligible',
     'travel_required',
-    'relocation_expenses_reimbursed,',
+    'relocation_expenses_reimbursed',
     'appointment_type','work_schedule',
     'service',
     'promotion_potential',
