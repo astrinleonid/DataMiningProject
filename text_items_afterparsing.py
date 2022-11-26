@@ -9,11 +9,11 @@ JOB_FAMILY_SERIES = """
 0801 General Engineering
 """
 TRAVEL_REQUIRED = {
-'Occasional travel - Travel required up to 15% of the time.' : ('Yes',15),
-'25% or less - Varies' : ('Yes', 25),
-'Occasional travel - You may be expected to travel for this position.' : ('Yes',20),
-'Occasional travel - You may be expected to travel 1-5 days per month for this position.' : ('Yes', 20),
-'Not required' : ('No', 0)
+'Occasional travel - Travel required up to 15% of the time.' : (True,15),
+'25% or less - Varies' : (True, 25),
+'Occasional travel - You may be expected to travel for this position.' : (True,20),
+'Occasional travel - You may be expected to travel 1-5 days per month for this position.' : (True, 20),
+'Not required' : (False, 0)
 }
 
 def parce_salary_text(text):
