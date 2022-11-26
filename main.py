@@ -2,10 +2,11 @@ import requests
 import argparse
 from bs4 import BeautifulSoup
 import sys
-from database_class import StorageDatabase, TABLE_LIST, TEXT_FIELDS
-from parse_items import *
-from url_open import *
-from tests import *
+from database_class import StorageDatabase, TABLE_LIST, TEXT_FIELDS, BINARY_FIELDS, SQL_BUILDER, NUMERIC_FIELDS
+from parse_items import parse_overview, parse_summary, parse_card_header, parse_duties, parse_requirements, text_prepare
+from url_open import html_open
+
+
 
 def parse_job_card(details, professional_area_id, db):
     """
@@ -20,6 +21,9 @@ def parse_job_card(details, professional_area_id, db):
     # Getting the agency and department, if new store to the database
     department_name = str(job_card['department'])
     agency_name = str(job_card['agency'])
+
+
+
     print(f"Department: {department_name}")
     department_id = db.table_update_row_return_id('departments', 'name', department_name, {'name' : department_name})
     print(f"Agency: {agency_name}")
@@ -34,6 +38,7 @@ def parse_job_card(details, professional_area_id, db):
     # Filling the record with the items parsed from the webpage.
     # If the item has to be stored in the separate table, the record in that table is made and
     # its ID is stored in the job_card_items with corresponding key.
+
 
     for key, value in job_card.items():
 
@@ -166,6 +171,8 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
             (details_urls, count) = get_card_list_at_prof_area(card_url, old_count, limit)
 
             jobs = []
+
+            # details_list = open_with_grequests(details_urls)
             for url in details_urls:
                 details = html_open(url)
                 job_card = parse_job_card(details, professional_area_id, db)
@@ -191,7 +198,7 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
 def main(limit, prof_area_param, db_mode):
 
     try:
-        soup = html_open(URL_NAME)
+        soup = html_open()
     except FileNotFoundError as er:
         print(f"Failed to open URL, error : {er}")
         return

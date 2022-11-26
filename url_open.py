@@ -1,11 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 
-
-
-URL_NAME = 'https://www.usajobs.gov/?c=opportunities'
-
-def html_open(url_name):
+URL_NAME = "https://www.usajobs.gov/?c=opportunities"
+def html_open(url_name = URL_NAME):
     """
     Opens web page at url_name
     Returns the soup of the whole page
