@@ -2,7 +2,13 @@ from database_class import *
 
 def tests():
 
-    db = StorageDatabase(FILE)
+    """
+    Attention!!!
+    Running tests will drop existing database
+
+    """
+
+    db = StorageDatabase(SQL_BUILDER['new'])
     db.sql_exec("SHOW TABLES" ,"s")
     print(db.__table_find_row__('departments', 'name', "some dept 5"))
     db.__table_add_row__('departments', {'name' : "some dept 5"})

@@ -33,6 +33,9 @@ TEXT_FIELDS = """
  """
 
 def text_prepare(value):
+    """
+    Prepare text field in such a vay that it will not cause problems whe inserted into SQL quiery
+    """
 
     if type(value) == str:
         return value.replace('"',"'").strip()
@@ -69,6 +72,9 @@ class StorageDatabase:
 
 
     def sql_exec(self,sql,show = 'n', *kwargs):
+        """
+        execute SQL quierty. if show == 'y' print the result to the standard output
+        """
 
         with self.__connection__.cursor() as cursor:
             cursor.execute(self.__USE__)
@@ -87,6 +93,9 @@ class StorageDatabase:
 
 
     def __table_add_row__(self, table, data_items):
+        """
+        Add row into the table
+        """
 
         names = []
         values = []
@@ -99,20 +108,6 @@ class StorageDatabase:
 
         self.sql_exec(sql)
 
-
-    def table_add_row_return_id(self,table,data_items):
-
-        self.__table_add_row__(table, data_items)
-        sql = f"SELECT MAX(ID) AS ID FROM {table}"
-        return self.sql_exec(sql)[0]['ID']
-
-    def table_find_row_return_id(self, table, column, value):
-
-        row = self.__table_find_row__(table, column, value)
-        if len(row) > 0:
-            return row[0]['ID']
-        else:
-            return 0
 
     def table_update_row_return_id(self, table, column, value, data_items):
 
@@ -139,8 +134,12 @@ class StorageDatabase:
         else:
             return []
 
+    def current_no_of_records(self):
+        sql = f"SELECT MAX(ID) AS ID FROM job_card"
+        return self.sql_exec(sql)[0]['ID']
+
     def table_update_row(self, table, ID, column, value):
-        sql = f'UPDATE {table} SET {column} = {value} WHERE ID = ID'
+        sql = f'UPDATE {table} SET {column} = {value} WHERE ID = {ID}'
         res = self.sql_exec(sql)
         if len(res) > 0:
             return res[0]

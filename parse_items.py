@@ -57,7 +57,7 @@ def parse_requirements(soup):
 
 def parse_duties(soup):
     """
-    Parses the Requirements section of of the individual announcement page.
+    Parses the Requirements section of the individual announcement page.
     Returns one-item dictionary with the key "requirements" and the list of requirements as value
     """
 
@@ -71,6 +71,10 @@ def parse_duties(soup):
     else:
         return {"duties" : []}
 def parse_summary(soup):
+    """
+        Parses the Summary section of the individual announcement page.
+        Returns one-item dictionary with the key "requirements" and the list of requirements as value
+    """
 
     summary_section = soup.find('div', id="summary")
     summary_text_section = summary_section.find('p')

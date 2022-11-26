@@ -30,6 +30,12 @@ We aim to collect information that focuses on how to filter the info based on th
 3. to suit few specific skill sets
 4. for little or no years of experience. (For freshers)
 
+## Command line options:
 
+  -h, --help       show this help message and exit
+  -s SECTION_NAME  Limit parsing to one section (professional area)
+  -l Limit         Limit number of cards parsed per section
+  -m {keep,new}    keep to use existing database, new to drop it and start a
+                   new one
 
 '''
