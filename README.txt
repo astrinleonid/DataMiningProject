@@ -33,9 +33,11 @@ We aim to collect information that focuses on how to filter the info based on th
 ## Command line options:
 
   -h, --help       show this help message and exit
-  -s SECTION_NAME  Limit parsing to one section (professional area)
-  -l Limit         Limit number of cards parsed per section
+  -s SECTION_NAME  Limit parsing to one section (professional area). Use _
+                   instead of space
+  -l L             Limit number of cards parsed per section (for debugging)
   -m {keep,new}    keep to use existing database, new to drop it and start a
                    new one
+  -p SQL_PASSWORD  Enter your mysql root password
 
 '''

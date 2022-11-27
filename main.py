@@ -3,12 +3,50 @@ import argparse
 import logging
 # from bs4 import BeautifulSoup
 import sys
-from database_class import StorageDatabase, TABLE_LIST, TEXT_FIELDS, NUMERIC_FIELDS, BINARY_FIELDS, SQL_BUILDER
+from database_class import StorageDatabase
 from parse_items import *
 from greq_open import single_url_open, multiple_urls_open
 # from tests import *
 BATCH_SIZE = 7
 
+TABLE_LIST = {
+
+    'telework_eligible',
+    'travel_required',
+    'relocation_expenses_reimbursed',
+    'appointment_type', 'work_schedule',
+    'service',
+    'promotion_potential',
+    'security_clearance',
+    'position_sensitivity_and_risk',
+    'trust_determination_process',
+    'requirements',
+    'duties',
+    'summary',
+    'pay_scale_grade',
+    'job_family_series',
+
+}
+
+# 'open_closing_dates',
+
+TEXT_FIELDS = """
+
+    'salary',
+    'announcement_number',
+    'open_closing_dates'
+ """
+
+NUMERIC_FIELDS = """
+        'control_number'
+
+"""
+
+BINARY_FIELDS = """
+    'supervisory_status',
+    'drug_test'
+
+"""
 
 
 def parse_job_card(details, professional_area_id, db):
@@ -123,7 +161,7 @@ def get_card_list_at_prof_area(url_name, old_count, limit):
 
 
 
-def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
+def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep', sql_password = 'from_file'):
 
     """
     Top level parser, parses the page with the list of the sections opportunities are grouped to topics.
@@ -131,7 +169,7 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
     Each embedded dictionary contains subsection names as keys, list of cards as value
     """
 
-    db = StorageDatabase(SQL_BUILDER[db_mode])
+    db = StorageDatabase(db_mode, sql_password)
 
     titles_section = soup.find("div",class_="usajobs-landing-find-opportunities__section-container")
     class_of_category = "usajobs-landing-find-opportunities__section-title"
@@ -200,18 +238,16 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
 
             sections[current_index][category_title].append({title.text.strip() : jobs})
 
-    # db.sql_exec("SELECT * FROM departments", 's')
-    # db.sql_exec("SELECT * FROM agencies", 's')
-    # db.sql_exec("SELECT * FROM promotion_potential", 's')
-    # db.sql_exec("SELECT * FROM trust_determination_process", 's')
-    # db.sql_exec("SELECT * FROM security_clearance", 's')
-    for i in range(1, db.current_no_of_records()):
-        print(f"Stored value for salary : {db.table_get_value('job_card', i, 'salary')}")
-        print(f"Stored value for dates : {db.table_get_value('job_card', i, 'open_closing_dates')}")
+    db.sql_exec("SELECT * FROM departments", 's')
+    db.sql_exec("SELECT * FROM agencies", 's')
+    db.sql_exec("SELECT * FROM promotion_potential", 's')
+    db.sql_exec("SELECT * FROM trust_determination_process", 's')
+    db.sql_exec("SELECT * FROM security_clearance", 's')
     db.sql_exec("SELECT * FROM job_card", 's')
+
     db.db_commit()
 
-def main(limit, prof_area_param, db_mode):
+def main(limit, prof_area_param, db_mode, sql_password):
 
     try:
         soup = single_url_open()
@@ -220,23 +256,26 @@ def main(limit, prof_area_param, db_mode):
         print(f"Failed to open URL, error : {er}")
         return
         # soup = BeautifulSoup(file,"html-parser")
-    sections = parse_sections(soup, limit, prof_area_param, db_mode)
+    sections = parse_sections(soup, limit, prof_area_param, db_mode, sql_password)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-s', dest='section_name', type=str, default='', help='Limit parsing to one section (professional area). Use _ instead of space')
+    parser.add_argument('-p', dest='sql_password', type=str, default='from_file', help='Enter your mysql root password')
     parser.add_argument('-l', type=int, default=-1, help='Limit number of cards parsed per section')
-    parser.add_argument('-m', choices=['keep','new'], default=-1, help='keep to use existing database, new to drop it and start a new one') # TODO: make selector
+    parser.add_argument('-m', choices=['keep','new'], default=-1, help='keep to use existing database, new to drop it and start a new one')
+
     args = parser.parse_args()
 
     print(args.l)
     print(args.m)
     print(args.section_name)
+    print(args.sql_password)
     section_name = " ".join(args.section_name.split('_'))
-    # tests()
-    main(args.l, section_name, args.m)
+
+    main(args.l, section_name, args.m, args.sql_password)
 
 
 

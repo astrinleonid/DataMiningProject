@@ -1,50 +1,7 @@
 import pymysql
-from password import PASSWORD
-SQL_BUILDER = {
-'new' : "usajobs_db.sql",
-'keep' : "usajobs_db_keepdb.sql"}
-
-TABLE_LIST = {
-
-    'telework_eligible',
-    'travel_required',
-    'relocation_expenses_reimbursed',
-    'appointment_type','work_schedule',
-    'service',
-    'promotion_potential',
-    'security_clearance',
-    'position_sensitivity_and_risk',
-    'trust_determination_process',
-    'requirements',
-    'duties',
-    'summary',
-    'pay_scale_grade',
-    'job_family_series',
-
-}
 
 
-# 'open_closing_dates',
-
-TEXT_FIELDS = """
-    
-    'salary',
-    'announcement_number',
-    'open_closing_dates'
- """
-
-NUMERIC_FIELDS = """
-        'control_number'
-
-"""
-
-BINARY_FIELDS = """
-    'supervisory_status',
-    'drug_test'
-
-"""
-
-
+SQL_FILE = "usajobs_db_keepdb.sql"
 
 def text_prepare(value):
     """
@@ -58,18 +15,28 @@ def text_prepare(value):
 
 class StorageDatabase:
 
-    def __init__(self,filename = "usajobs_db.sql"):
+    def __init__(self, mode, sql_password):
+        if sql_password == 'from_file':
+            with open('password.txt') as file:
+                sql_password = file.read()
         self.__connection__ = pymysql.connect(host='localhost',
-                                     user='root',
-                                     password=PASSWORD,
-                                     cursorclass=pymysql.cursors.DictCursor)
+                                              user='root',
+                                              password=sql_password,
+                                              cursorclass=pymysql.cursors.DictCursor)
 
         self.__USE__ = "USE mydb"
         self.__SH_T__ = "SHOW TABLES"
+        filename = SQL_FILE
+
+        if mode == 'new':
+            sql = 'DROP SCHEMA IF EXISTS `mydb`'
+            with self.__connection__.cursor() as cursor:
+                cursor.execute(sql)
 
         with open(filename) as file:
              sql_script = file.read().strip('; \n')
              sqls = sql_script.split(';')
+
 
         with self.__connection__.cursor() as cursor:
             for sql in sqls:
@@ -97,6 +64,9 @@ class StorageDatabase:
             except pymysql.err.ProgrammingError as er:
                 print(f"\n\n SQL failed on \n {sql}")
                 raise pymysql.err.ProgrammingError(er)
+            except pymysql.err.DataError as er:
+                print(f"\n\n SQL failed on \n {sql}")
+                raise pymysql.err.DataError(er)
             result = cursor.fetchall()
             res = []
             for item in result:
@@ -185,12 +155,4 @@ class StorageDatabase:
 
 if __name__ == "__main__":
 
-    db = StorageDatabase(FILE)
-    db.sql_exec("SHOW TABLES","s")
-    print(db.__table_find_row__('departments', 'name', "some dept 5"))
-    db.__table_add_row__('departments', {'name' : "some dept 5"})
-    db.__table_add_row__('departments', {'name' : "some dept 6"})
-    db.__table_add_row__('departments', {'name' : "some dept 7"})
-    print(db.table_add_row_return_id('departments', {'name' : "some dept 9"}))
-    print(db.table_find_row_return_id('departments', 'name', "some dept 5"))
-    db.sql_exec("SELECT * FROM departments", 's')
+    pass

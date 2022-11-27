@@ -26,9 +26,9 @@ def parse_overview(soup):
         title_item = title_item.replace('%', ' ')
         title = ("_".join(title_item.strip().split())).lower()
         if title == 'job_family_series':
-            print("JFS not implemented as yet")
+            print("Label found JFS")
         elif title == 'locations':
-            print("Locations not implemented as yet")
+            print("Label found Loc")
         else:
             value = [text_prepare(item.text) for item in parameter.find_all("p")]
             overview.update({title: value[0]})
