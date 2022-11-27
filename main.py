@@ -1,12 +1,15 @@
-# import requests
+
 import argparse
 import logging
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 import sys
 from database_class import StorageDatabase, TABLE_LIST, TEXT_FIELDS, NUMERIC_FIELDS, BINARY_FIELDS, SQL_BUILDER
 from parse_items import *
 from greq_open import single_url_open, multiple_urls_open
 # from tests import *
+BATCH_SIZE = 7
+
+
 
 def parse_job_card(details, professional_area_id, db):
     """
@@ -179,12 +182,18 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
             #     # v_counter.add_card(job_card)
             #     jobs.append(job_card)
 
-            details_list = multiple_urls_open(details_urls)
-            for details in details_list:
+            n = BATCH_SIZE
+            num_urls = len(details_urls)
 
-                job_card = parse_job_card(details, professional_area_id, db)
-                # v_counter.add_card(job_card)
-                jobs.append(job_card)
+            batches = [details_urls[i:i+min(n,num_urls-i)] for i in range(0,num_urls,n)]
+
+            for batch in batches:
+                details_list = multiple_urls_open(batch)
+                for details in details_list:
+
+                    job_card = parse_job_card(details, professional_area_id, db)
+                    # v_counter.add_card(job_card)
+                    jobs.append(job_card)
 
             professional_area_id = db.table_update_row('professional_area',
                                                     professional_area_id, 'num_records', count)
@@ -217,7 +226,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-s', dest='section_name', type=str, default='', help='Limit parsing to one section (professional area)')
+    parser.add_argument('-s', dest='section_name', type=str, default='', help='Limit parsing to one section (professional area). Use _ instead of space')
     parser.add_argument('-l', type=int, default=-1, help='Limit number of cards parsed per section')
     parser.add_argument('-m', choices=['keep','new'], default=-1, help='keep to use existing database, new to drop it and start a new one') # TODO: make selector
     args = parser.parse_args()
@@ -225,9 +234,9 @@ if __name__ == "__main__":
     print(args.l)
     print(args.m)
     print(args.section_name)
-
+    section_name = " ".join(args.section_name.split('_'))
     # tests()
-    main(args.l, args.section_name, args.m)
+    main(args.l, section_name, args.m)
 
 
 

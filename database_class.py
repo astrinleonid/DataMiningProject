@@ -1,4 +1,5 @@
 import pymysql
+from password import PASSWORD
 SQL_BUILDER = {
 'new' : "usajobs_db.sql",
 'keep' : "usajobs_db_keepdb.sql"}
@@ -60,7 +61,7 @@ class StorageDatabase:
     def __init__(self,filename = "usajobs_db.sql"):
         self.__connection__ = pymysql.connect(host='localhost',
                                      user='root',
-                                     password='yKyw0716',
+                                     password=PASSWORD,
                                      cursorclass=pymysql.cursors.DictCursor)
 
         self.__USE__ = "USE mydb"

@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 import re
 from database_class import text_prepare
 
@@ -14,15 +14,25 @@ def parse_overview(soup):
 
     for parameter in soup.find_all(class_="usajobs-joa-summary__item usajobs-joa-summary--beta__item"):
         title_item_soup = parameter.find("h5")
-        if not title_item_soup == None:
-            title_item = title_item_soup.text
-            title_item = title_item.replace('(', ' ')
-            title_item = title_item.replace(')', ' ')
-            title_item = title_item.replace('&', ' ')
-            title_item = title_item.replace('%', ' ')
-            title = ("_".join(title_item.strip().split())).lower()
+        if title_item_soup == None:
+            title_item_soup = parameter.find("h2")
+            if title_item_soup == None:
+                continue
+
+        title_item = title_item_soup.text
+        title_item = title_item.replace('(', ' ')
+        title_item = title_item.replace(')', ' ')
+        title_item = title_item.replace('&', ' ')
+        title_item = title_item.replace('%', ' ')
+        title = ("_".join(title_item.strip().split())).lower()
+        if title == 'job_family_series':
+            print("JFS not implemented as yet")
+        elif title == 'locations':
+            print("Locations not implemented as yet")
+        else:
             value = [text_prepare(item.text) for item in parameter.find_all("p")]
             overview.update({title: value[0]})
+
     return overview
 
 def parse_card_header(soup):

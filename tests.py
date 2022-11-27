@@ -1,16 +1,10 @@
 from bs4 import BeautifulSoup
 from database_class import *
 # from main import parse_job_card
-from parse_items import parse_card_header
+from parse_items import *
+from greq_open import local_file_open, single_url_open
 
 from main import parse_job_card
-
-
-def test_page_scrap(filename = 'test_job_card.html'):
-
-    with open(filename, 'r') as file:
-        page = file.read()
-        return BeautifulSoup(page)
 
 
 def tests():
@@ -34,15 +28,17 @@ def tests():
     assert db.table_get_value('departments', 1, 'name') == {'name': 'some dept 5'}
     assert db.table_get_value('professional_area', 1, 'num_records')['num_records'] == 0
 
-    soup = html_open("https://www.usajobs.gov/job/683987500")
+    # soup = single_url_open("https://www.usajobs.gov/job/683987500")
+    # titles = parse_card_header(soup)
+    # print(titles)
+
+
+    soup = local_file_open('test_job_card.html')
     titles = parse_card_header(soup)
     print(titles)
+    assert titles == {'department': 'Department of the Army', 'agency': 'U.S. Army Corps of Engineers', 'title': 'Project Manager (Interdisciplinary)'}
 
-    assert titles == {'department': 'Department of the Navy', 'agency': 'Naval Sea Systems Command', 'title': 'ENGINEER/SCIENTIST'}
-    soup = test_page_scrap()
-    # job_card = parse_job_card(soup)
-    # for key, value in job_card.items():
-    #     print(key, value)
+    print(parse_overview(soup))
 
 
 if __name__ == '__main__':
