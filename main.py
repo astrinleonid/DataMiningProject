@@ -1,12 +1,12 @@
-import requests
+# import requests
 import argparse
+import logging
 from bs4 import BeautifulSoup
 import sys
-from database_class import StorageDatabase, TABLE_LIST, TEXT_FIELDS, BINARY_FIELDS, SQL_BUILDER, NUMERIC_FIELDS
-from parse_items import parse_overview, parse_summary, parse_card_header, parse_duties, parse_requirements, text_prepare
-from url_open import html_open
-
-
+from database_class import StorageDatabase, TABLE_LIST, TEXT_FIELDS, NUMERIC_FIELDS, BINARY_FIELDS, SQL_BUILDER
+from parse_items import *
+from greq_open import single_url_open
+# from tests import *
 
 def parse_job_card(details, professional_area_id, db):
     """
@@ -21,9 +21,6 @@ def parse_job_card(details, professional_area_id, db):
     # Getting the agency and department, if new store to the database
     department_name = str(job_card['department'])
     agency_name = str(job_card['agency'])
-
-
-
     print(f"Department: {department_name}")
     department_id = db.table_update_row_return_id('departments', 'name', department_name, {'name' : department_name})
     print(f"Agency: {agency_name}")
@@ -38,7 +35,6 @@ def parse_job_card(details, professional_area_id, db):
     # Filling the record with the items parsed from the webpage.
     # If the item has to be stored in the separate table, the record in that table is made and
     # its ID is stored in the job_card_items with corresponding key.
-
 
     for key, value in job_card.items():
 
@@ -65,6 +61,11 @@ def parse_job_card(details, professional_area_id, db):
                                       Yes/No expected, different value received : {value}""")
             job_card_record.update({key: binary_values[value]})
 
+# Create Formatter
+# logger = logging.getLogger('IMDB_parse')
+# logger.setLevel(logging.DEBUG)
+# formatter = logging.Formatter(
+#     '%(asctime)s-%(levelname)s-FILE:%(filename)s-FUNC:%(funcName)s-LINE:%(lineno)d-%(message)s')
 
 
     # Writing the record into the database
@@ -77,7 +78,7 @@ def parse_job_card(details, professional_area_id, db):
 
 def get_card_list_at_prof_area(url_name, old_count, limit):
 
-    soup = html_open(url_name)
+    soup = single_url_open(url_name)
     count = int(soup.find(class_="usajobs-search-controls__results-count").text.split()[0].strip())
     changes_on_page = count != old_count
     print(f"Records in database: {old_count}, records on this page: {count}")
@@ -98,7 +99,7 @@ def get_card_list_at_prof_area(url_name, old_count, limit):
 
         url_name_wpage = url_name + "&sort=enddate&page=" + str(page_number)
         print("scraping from url ", url_name_wpage)
-        soup = html_open(url_name_wpage)
+        soup = single_url_open(url_name_wpage)
         job_notices = soup.find_all(class_="usajobs-search-result--card")
         number_of_cards = len(job_notices)
         print("Cards on this page: ", number_of_cards)
@@ -171,10 +172,8 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
             (details_urls, count) = get_card_list_at_prof_area(card_url, old_count, limit)
 
             jobs = []
-
-            # details_list = open_with_grequests(details_urls)
             for url in details_urls:
-                details = html_open(url)
+                details = single_url_open(url)
                 job_card = parse_job_card(details, professional_area_id, db)
                 # v_counter.add_card(job_card)
                 jobs.append(job_card)
@@ -198,8 +197,9 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
 def main(limit, prof_area_param, db_mode):
 
     try:
-        soup = html_open()
+        soup = single_url_open()
     except FileNotFoundError as er:
+        # logger.error("Failed to establish connection to the starting page %s")
         print(f"Failed to open URL, error : {er}")
         return
         # soup = BeautifulSoup(file,"html-parser")
@@ -212,9 +212,8 @@ if __name__ == "__main__":
     parser.add_argument('-s', dest='section_name', type=str, default='', help='Limit parsing to one section (professional area)')
     parser.add_argument('-l', type=int, default=-1, help='Limit number of cards parsed per section')
     parser.add_argument('-m', choices=['keep','new'], default=-1, help='keep to use existing database, new to drop it and start a new one') # TODO: make selector
-
-
     args = parser.parse_args()
+
     print(args.l)
     print(args.m)
     print(args.section_name)
