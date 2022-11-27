@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import sys
 from database_class import StorageDatabase, TABLE_LIST, TEXT_FIELDS, NUMERIC_FIELDS, BINARY_FIELDS, SQL_BUILDER
 from parse_items import *
-from greq_open import single_url_open
+from greq_open import single_url_open, multiple_urls_open
 # from tests import *
 
 def parse_job_card(details, professional_area_id, db):
@@ -172,8 +172,16 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep'):
             (details_urls, count) = get_card_list_at_prof_area(card_url, old_count, limit)
 
             jobs = []
-            for url in details_urls:
-                details = single_url_open(url)
+
+            # for url in details_urls:
+            #     details = single_url_open(url)
+            #     job_card = parse_job_card(details, professional_area_id, db)
+            #     # v_counter.add_card(job_card)
+            #     jobs.append(job_card)
+
+            details_list = multiple_urls_open(details_urls)
+            for details in details_list:
+
                 job_card = parse_job_card(details, professional_area_id, db)
                 # v_counter.add_card(job_card)
                 jobs.append(job_card)
