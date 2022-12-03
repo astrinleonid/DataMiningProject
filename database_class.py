@@ -2,6 +2,7 @@ import pymysql
 
 
 SQL_FILE = "usajobs_db_keepdb.sql"
+US_STATES = "usstates.json"
 
 def text_prepare(value):
     """
@@ -32,6 +33,7 @@ class StorageDatabase:
             sql = 'DROP SCHEMA IF EXISTS `mydb`'
             with self.__connection__.cursor() as cursor:
                 cursor.execute(sql)
+
 
         with open(filename) as file:
              sql_script = file.read().strip('; \n')
@@ -76,7 +78,7 @@ class StorageDatabase:
             return res
 
 
-    def __table_add_row__(self, table, data_items):
+    def table_add_row(self, table, data_items):
         """
         Add row into the table
         """
@@ -105,7 +107,7 @@ class StorageDatabase:
         if len(row) > 0:
             return row[0]['ID']
         else:
-            self.__table_add_row__(table, data_items)
+            self.table_add_row(table, data_items)
             sql = f"SELECT MAX(ID) AS ID FROM {table}"
             return self.sql_exec(sql)[0]['ID']
 
