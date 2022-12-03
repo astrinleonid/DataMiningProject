@@ -1,6 +1,7 @@
 # from bs4 import BeautifulSoup
 import re
 from database_class import text_prepare
+from parse_locations import parse_locations
 
 
 def parse_overview(soup):
@@ -28,7 +29,7 @@ def parse_overview(soup):
         if title == 'job_family_series':
             print("Label found JFS")
         elif title == 'locations':
-            print("Label found Loc")
+            overview.update({'locations' : parse_locations(parameter)})
         else:
             value = [text_prepare(item.text) for item in parameter.find_all("p")]
             overview.update({title: value[0]})

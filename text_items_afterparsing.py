@@ -46,6 +46,14 @@ def parse_travel_requirements(text):
     """
     pass
 
+def parse_location(location):
+    """
+    Receives the text 
+
+    """
+
+
+
 if __name__ == '__main__':
 
     assert parce_salary_text(SALARY_TEXT) == (56205, 152058)

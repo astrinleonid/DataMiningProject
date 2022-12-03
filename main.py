@@ -102,17 +102,15 @@ def parse_job_card(details, professional_area_id, db):
                                       Yes/No expected, different value received : {value}""")
             job_card_record.update({key: binary_values[value]})
 
-# Create Formatter
-# logger = logging.getLogger('IMDB_parse')
-# logger.setLevel(logging.DEBUG)
-# formatter = logging.Formatter(
-#     '%(asctime)s-%(levelname)s-FILE:%(filename)s-FUNC:%(funcName)s-LINE:%(lineno)d-%(message)s')
-
-
-    # Writing the record into the database
     job_card_id = db.table_update_row_return_id('job_card', 'announcement_number',
                                                 job_card_record['announcement_number'],
                                                 job_card_record)
+
+
+    if 'locations' in job_card:
+        for location in job_card['locations']:
+            loc_id = db.table_update_row_return_id('locations', 'city', location['city'], location)
+            db.table_add_row('pos_at_loc', {'job_card_id' : job_card_id, 'location_id' : loc_id} )
 
     print(f"Job announcement card added/found , ID: {job_card_id}")
     return job_card
