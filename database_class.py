@@ -1,3 +1,5 @@
+import json
+
 import pymysql
 
 
@@ -34,7 +36,6 @@ class StorageDatabase:
             with self.__connection__.cursor() as cursor:
                 cursor.execute(sql)
 
-
         with open(filename) as file:
              sql_script = file.read().strip('; \n')
              sqls = sql_script.split(';')
@@ -46,12 +47,11 @@ class StorageDatabase:
 
         print("Database created sucsessfully")
 
-        # with self.__connection__.cursor() as cursor:
-        #     cursor.execute(self.__USE__)
-        #     cursor.execute(self.__SH_T__)
-        #     result = cursor.fetchall()
-        #     for item in result:
-        #         print(item)
+        if mode == 'new':
+            with open('usstates.json', "r") as read_content:
+                states_list = json.load(read_content)
+                for code, state in states_list.items():
+                    self.table_add_row('states', {'state_id': code, 'name': state})
 
 
     def sql_exec(self,sql,show = 'n', *kwargs):
