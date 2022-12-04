@@ -159,12 +159,13 @@ def get_card_list_at_prof_area(url_name, old_count, limit):
     control_no = 0
     for url in details_urls:
         control_no += int(url.split('/')[-1].strip(' #'))
+    control_no = control_no % 1234567
     print(f"Control number :  {control_no}")
     return (details_urls, count, control_no)
 
 
 
-def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep', sql_password = 'from_file'):
+def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', sql_password = 'from_file'):
 
     """
     Top level parser, parses the page with the list of the sections opportunities are grouped to topics.
@@ -186,8 +187,6 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep', sql_p
     i = 0
     for title in titles:
         i += 1
-        # if i == limit:
-        #     break
         class_name = title['class'][0]
 
         if class_name == class_of_category:
@@ -216,27 +215,30 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep', sql_p
 
             (details_urls, count, control_no) = get_card_list_at_prof_area(card_url, old_count, limit) #TODO get hash
 
-            db.table_update_row('professional_area', {'num_records' : count, 'control_sum' : control_no})
+            if old_control_no == control_no:
+                print("No changes found")
+            else:
+                print("Changes found")
+                if db_mode != 'checkonly':
 
-            jobs = []
+                    db.table_update_row('professional_area', professional_area_id, 'control_sum', control_no)
+                    db.table_update_row('professional_area', professional_area_id, 'num_records', count)
+                    jobs = []
 
-            n = BATCH_SIZE
-            num_urls = len(details_urls)
+                    n = BATCH_SIZE
+                    num_urls = len(details_urls)
 
-            batches = [details_urls[i:i+min(n,num_urls-i)] for i in range(0,num_urls,n)]
+                    batches = [details_urls[i:i+min(n,num_urls-i)] for i in range(0,num_urls,n)]
 
-            for batch in batches:
-                details_list = multiple_urls_open(batch)
-                for details in details_list:
+                    for batch in batches:
+                        details_list = multiple_urls_open(batch)
+                        for details in details_list:
 
-                    job_card = parse_job_card(details, professional_area_id, db)
-                    # v_counter.add_card(job_card)
-                    jobs.append(job_card)
+                            job_card = parse_job_card(details, professional_area_id, db)
+                            # v_counter.add_card(job_card)
+                            jobs.append(job_card)
 
-            professional_area_id = db.table_update_row('professional_area',
-                                                    professional_area_id, 'num_records', count)
-
-            sections[current_index][category_title].append({title.text.strip() : jobs})
+                    sections[current_index][category_title].append({title.text.strip() : jobs})
 
     db.sql_exec("SELECT * FROM departments", 's')
     db.sql_exec("SELECT * FROM agencies", 's')
@@ -266,7 +268,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', dest='section_name', type=str, default='', help='Limit parsing to one section (professional area). Use _ instead of space')
     parser.add_argument('-p', dest='sql_password', type=str, default='from_file', help='Enter your mysql root password')
     parser.add_argument('-l', type=int, default=-1, help='Limit number of cards parsed per section')
-    parser.add_argument('-m', choices=['keep','new'], default=-1, help='keep to use existing database, new to drop it and start a new one')
+    parser.add_argument('-m', choices=['keep','new','checkonly'], default=-1, help='keep to use existing database, new to drop it and start a new one')
 
     args = parser.parse_args()
 
