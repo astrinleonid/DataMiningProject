@@ -153,9 +153,14 @@ def get_card_list_at_prof_area(url_name, old_count, limit):
         if number_of_cards < 25:
             break
 
-    print("List of urls formed, starting parsing")
-    print(details_urls)
-    return (details_urls, count)
+    print("List of urls formed, starting parsing") #TODO: Replace with logging
+
+    # Counting control number
+    control_no = 0
+    for url in details_urls:
+        control_no += int(url.split('/')[-1].strip(' #'))
+    print(f"Control number :  {control_no}")
+    return (details_urls, count, control_no)
 
 
 
@@ -207,16 +212,13 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep', sql_p
                                                                 'category_id': category_id})
 
             old_count = db.table_get_value('professional_area', professional_area_id, 'num_records')['num_records']
+            old_control_no = db.table_get_value('professional_area', professional_area_id, 'control_sum')['control_sum']
 
-            (details_urls, count) = get_card_list_at_prof_area(card_url, old_count, limit)
+            (details_urls, count, control_no) = get_card_list_at_prof_area(card_url, old_count, limit) #TODO get hash
+
+            db.table_update_row('professional_area', {'num_records' : count, 'control_sum' : control_no})
 
             jobs = []
-
-            # for url in details_urls:
-            #     details = single_url_open(url)
-            #     job_card = parse_job_card(details, professional_area_id, db)
-            #     # v_counter.add_card(job_card)
-            #     jobs.append(job_card)
 
             n = BATCH_SIZE
             num_urls = len(details_urls)
@@ -238,10 +240,11 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'keep', sql_p
 
     db.sql_exec("SELECT * FROM departments", 's')
     db.sql_exec("SELECT * FROM agencies", 's')
-    db.sql_exec("SELECT * FROM promotion_potential", 's')
-    db.sql_exec("SELECT * FROM trust_determination_process", 's')
-    db.sql_exec("SELECT * FROM security_clearance", 's')
-    db.sql_exec("SELECT * FROM job_card", 's')
+    db.sql_exec("SELECT * FROM professional_area", 's')
+    # db.sql_exec("SELECT * FROM promotion_potential", 's')
+    # db.sql_exec("SELECT * FROM trust_determination_process", 's')
+    # db.sql_exec("SELECT * FROM security_clearance", 's')
+    # db.sql_exec("SELECT * FROM job_card", 's')
 
     db.db_commit()
 

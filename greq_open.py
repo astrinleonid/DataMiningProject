@@ -22,7 +22,7 @@ def single_url_open(url_name = 'https://www.usajobs.gov/?c=opportunities'):
     Returns the soup of the whole page
     """
     print(f"Opening {url_name}")
-    pages = open_with_grequests([url_name])
+    pages = open_with_grequests([url_name]) #TODO: process exeption
     return BeautifulSoup(pages[0],"html.parser")
 
 def multiple_urls_open(url_list):
