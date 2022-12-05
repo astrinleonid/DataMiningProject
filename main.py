@@ -1,52 +1,55 @@
 
 import argparse
 import logging
-# from bs4 import BeautifulSoup
+import json
 import sys
 from database_class import StorageDatabase
 from parse_items import *
 from greq_open import single_url_open, multiple_urls_open
-# from tests import *
+
+with open("config.json", "r") as config_file:
+    config = json.load(config_file)
+
 BATCH_SIZE = 7
 
-TABLE_LIST = {
-
-    'telework_eligible',
-    'travel_required',
-    'relocation_expenses_reimbursed',
-    'appointment_type', 'work_schedule',
-    'service',
-    'promotion_potential',
-    'security_clearance',
-    'position_sensitivity_and_risk',
-    'trust_determination_process',
-    'requirements',
-    'duties',
-    'summary',
-    'pay_scale_grade',
-    'job_family_series',
-
-}
+# TABLE_LIST = {
+#
+#     'telework_eligible',
+#     'travel_required',
+#     'relocation_expenses_reimbursed',
+#     'appointment_type', 'work_schedule',
+#     'service',
+#     'promotion_potential',
+#     'security_clearance',
+#     'position_sensitivity_and_risk',
+#     'trust_determination_process',
+#     'requirements',
+#     'duties',
+#     'summary',
+#     'pay_scale_grade',
+#     'job_family_series',
+#
+# }
 
 # 'open_closing_dates',
-
-TEXT_FIELDS = """
-
-    'salary',
-    'announcement_number',
-    'open_closing_dates'
- """
-
-NUMERIC_FIELDS = """
-        'control_number'
-
-"""
-
-BINARY_FIELDS = """
-    'supervisory_status',
-    'drug_test'
-
-"""
+#
+# TEXT_FIELDS = """
+#
+#     'salary',
+#     'announcement_number',
+#     'open_closing_dates'
+#  """
+#
+# NUMERIC_FIELDS = """
+#         'control_number'
+#
+# """
+#
+# BINARY_FIELDS = """
+#     'supervisory_status',
+#     'drug_test'
+#
+# """
 
 
 def parse_job_card(details, professional_area_id, db):
@@ -79,15 +82,15 @@ def parse_job_card(details, professional_area_id, db):
 
     for key, value in job_card.items():
 
-        if key in TABLE_LIST:
+        if key in config['overview_fields']['TABLE_LIST']:
             # print(f"Updating table {key}")
             item_id = db.table_update_row_return_id(key, 'text', value, {'text' : value})
 
             job_card_record.update({key + '_id': item_id})
-        if key in TEXT_FIELDS:
+        if key in config['overview_fields']['TEXT_FIELDS']:
             job_card_record.update({key: value})
 
-        if key in NUMERIC_FIELDS:
+        if key in config['overview_fields']['NUMERIC_FIELDS']:
             try:
                 numeric_value = int(value)
             except ValueError as er:
@@ -95,7 +98,7 @@ def parse_job_card(details, professional_area_id, db):
                                       non numeric received : {value}""")
             job_card_record.update({key: value})
 
-        if key in BINARY_FIELDS:
+        if key in config['overview_fields']['BINARY_FIELDS']:
             binary_values = {'Yes' : 1 ,'No' : 0}
             if value not in binary_values:
                 raise ValueError(f"""The field {key} is supposed to be binary,  , \n"
@@ -118,7 +121,7 @@ def parse_job_card(details, professional_area_id, db):
 def get_card_list_at_prof_area(url_name, old_count, limit):
 
     soup = single_url_open(url_name)
-    count = int(soup.find(class_="usajobs-search-controls__results-count").text.split()[0].strip())
+    count = int(soup.find(class_=config["tags"]["num_cards_on_page"]).text.split()[0].strip())
     changes_on_page = count != old_count
     print(f"Records in database: {old_count}, records on this page: {count}")
     if changes_on_page:
@@ -136,10 +139,10 @@ def get_card_list_at_prof_area(url_name, old_count, limit):
             break
         print("Page number = ", page_number)
 
-        url_name_wpage = url_name + "&sort=enddate&page=" + str(page_number)
+        url_name_wpage = url_name + config['pathes']['page_num_parameter'] + str(page_number)
         print("scraping from url ", url_name_wpage)
         soup = single_url_open(url_name_wpage)
-        job_notices = soup.find_all(class_="usajobs-search-result--card")
+        job_notices = soup.find_all(class_= config['tags']['cards_in_the_list'])
         number_of_cards = len(job_notices)
         print("Cards on this page: ", number_of_cards)
         page_number += 1
@@ -175,9 +178,9 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
 
     db = StorageDatabase(db_mode, sql_password)
 
-    titles_section = soup.find("div",class_="usajobs-landing-find-opportunities__section-container")
-    class_of_category = "usajobs-landing-find-opportunities__section-title"
-    class_of_prof_area = "usajobs-landing-find-opportunities__job-item"
+    titles_section = soup.find("div",class_ = config['tags']["title_class_teg"])
+    class_of_category = config['tags']["category_class_tag"]
+    class_of_prof_area = config['tags']["professional_area_class_tag"]
     titles = soup.find_all("li",class_=[class_of_prof_area,class_of_category])
     sections = []
     category_title = ""
@@ -203,7 +206,7 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
             print(professional_area)
             if len(prof_area_param) > 0 and prof_area_param != professional_area:
                 continue
-            card_url = ("https://www.usajobs.gov" + title.find("a", href=True)["href"])
+            card_url = (config['pathes']['target_url'] + title.find("a", href=True)["href"])
             print("Parsing: ",card_url)
             professional_area_id = db.table_update_row_return_id('professional_area', 'title',
                                                                  professional_area,
@@ -213,7 +216,7 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
             old_count = db.table_get_value('professional_area', professional_area_id, 'num_records')['num_records']
             old_control_no = db.table_get_value('professional_area', professional_area_id, 'control_sum')['control_sum']
 
-            (details_urls, count, control_no) = get_card_list_at_prof_area(card_url, old_count, limit) #TODO get hash
+            (details_urls, count, control_no) = get_card_list_at_prof_area(card_url, old_count, limit)
 
             if old_control_no == control_no:
                 print("No changes found")
@@ -240,25 +243,23 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
 
                     sections[current_index][category_title].append({title.text.strip() : jobs})
 
-    db.sql_exec("SELECT * FROM departments", 's')
+
     db.sql_exec("SELECT * FROM agencies", 's')
+    db.sql_exec("SELECT * FROM departments", 's')
+    db.sql_exec("SELECT * FROM locations LIMIT 5", 's')
+    db.sql_exec("SELECT * FROM states LIMIT 5", 's')
     db.sql_exec("SELECT * FROM professional_area", 's')
-    # db.sql_exec("SELECT * FROM promotion_potential", 's')
-    # db.sql_exec("SELECT * FROM trust_determination_process", 's')
-    # db.sql_exec("SELECT * FROM security_clearance", 's')
-    # db.sql_exec("SELECT * FROM job_card", 's')
 
     db.db_commit()
 
 def main(limit, prof_area_param, db_mode, sql_password):
 
     try:
-        soup = single_url_open()
+        soup = single_url_open(config['pathes']["start_page"])
     except FileNotFoundError as er:
         # logger.error("Failed to establish connection to the starting page %s")
         print(f"Failed to open URL, error : {er}")
         return
-        # soup = BeautifulSoup(file,"html-parser")
     sections = parse_sections(soup, limit, prof_area_param, db_mode, sql_password)
 
 if __name__ == "__main__":

@@ -1,11 +1,9 @@
 from bs4 import BeautifulSoup
 from database_class import *
-# from main import parse_job_card
+import json
 from parse_items import *
 from greq_open import local_file_open, single_url_open
-
 from main import parse_job_card
-
 
 def tests():
 
@@ -37,6 +35,9 @@ def tests():
     soup = local_file_open('test_job_card.html')
     titles = parse_card_header(soup)
     print(titles)
+
+
+
     assert titles == {'department': 'Department of the Army', 'agency': 'U.S. Army Corps of Engineers',
                       'title': 'Project Manager (Interdisciplinary)'}
 
@@ -53,5 +54,15 @@ def tests():
          'text': 'About the Position: Serves as a Project Manager for the Corps of Engineers assigned to the Planning, Programs and Project Management Division within the Huntington, Louisville, or Chicago Districts. Works under general supervision of the Section Chief, who makes assignments in terms of overall objectives and any limitations on the scope of projects. Incumbent plans and carries out assignments independently, setting own priorities and coordinating work, as necessary.'}
     ]
 
+    soup = local_file_open('locations_section.html')
+    result = parse_locations(soup)
+
+    print(result[0])
+    assert result[0] == {'city': 'Mobile', 'state_ID': 'AL'}
+
+
 if __name__ == '__main__':
+    with open("config.json", "r") as config_file:
+        config = json.load(config_file)
+    print(config['overview_fields']['TABLE_LIST'][5])
     tests()

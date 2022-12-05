@@ -1,8 +1,6 @@
-# from bs4 import BeautifulSoup
-import re
-from database_class import text_prepare
-from parse_locations import parse_locations
 
+from database_class import text_prepare
+from main import config
 
 def parse_overview(soup):
     """
@@ -13,7 +11,8 @@ def parse_overview(soup):
 
     overview = {}
 
-    for parameter in soup.find_all(class_="usajobs-joa-summary__item usajobs-joa-summary--beta__item"):
+    for parameter in soup.find_all(class_=config['tags']["overview_item_class_tag"]):
+    # for parameter in soup.find_all(class_="usajobs-joa-summary__item usajobs-joa-summary--beta__item"):
         title_item_soup = parameter.find("h5")
         if title_item_soup == None:
             title_item_soup = parameter.find("h2")
@@ -42,15 +41,15 @@ def parse_card_header(soup):
     :return: dictionary of the overview items
 
     """
-    card_header = soup.find(class_="usajobs-joa-banner__body usajobs-joa-banner--pilot__body")
+    card_header = soup.find(class_= config['tags']["card_header_class_teg"])
 
-    title_class = "usajobs-joa-banner__title"
+    title_class = config['tags']["card_title_class_teg"]
     title = card_header.find(class_=title_class).text.strip()
-    department_class = "usajobs-joa-banner__dept"
+    department_class = config['tags']["dep_name_class_teg"]
     department = card_header.find(class_=department_class).text.strip()
-    agency_class = "usajobs-joa-banner__agency usajobs-joa-banner--v1-3__agency"
+    agency_class = config['tags']["agency_name_class_teg"]
     agency = card_header.find(class_=agency_class).text.strip()
-    # TODO: store in the database
+
     return {"department" : department, "agency" : agency, "title" : title}
 
 def parse_requirements(soup):
@@ -74,7 +73,7 @@ def parse_duties(soup):
 
     duties = []
     duties_section = soup.find('div', id="duties")
-    duty_list = duties_section.find(class_="usajobs-list-bullets")
+    duty_list = duties_section.find(class_= config['tags']["bullets_tag"])
     if not duty_list == None:
         for duty in duty_list.find_all():
             duties.append(text_prepare(duty.text))
@@ -92,3 +91,19 @@ def parse_summary(soup):
     summary_text = text_prepare(summary_text_section.text)
 
     return {"summary" : summary_text}
+
+def parse_locations(soup):
+    """
+    Returns a list of locations from a job card
+    """
+    locations = []
+    for parameter in soup.find_all('li'):
+        loc = parameter.find('a')
+        if 'data-name' in loc.attrs:
+            loc_line = [name.strip().strip(',') for name in loc.attrs['data-name'].split()]
+            (city, state) = (" ".join(loc_line[:-1]),loc_line[-1])
+
+            locations.append({'city': city, 'state_ID': state})
+
+    print(len(locations))
+    return locations

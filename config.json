@@ -1,0 +1,58 @@
+{
+  "pathes" : {
+    "target_url": "https://www.usajobs.gov",
+    "start_page": "https://www.usajobs.gov/?c=opportunities",
+    "page_num_parameter" : "&sort=enddate&page="},
+  "header": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+  },
+  "log_file": "usajobs_scraping.log",
+  "batch_size": 10,
+  "tags": {
+    "title_class_teg": "usajobs-landing-find-opportunities__section-container",
+    "category_class_tag": "usajobs-landing-find-opportunities__section-title",
+    "professional_area_class_tag": "usajobs-landing-find-opportunities__job-item",
+    "overview_item_class_tag": "usajobs-joa-summary__item usajobs-joa-summary--beta__item",
+    "agency_contacts" : "usajobs-joa-agency-modal__contact-info",
+    "num_cards_on_page" : "usajobs-search-controls__results-count",
+    "cards_in_the_list" : "usajobs-search-result--card",
+    "card_header_class_teg" : "usajobs-joa-banner__body usajobs-joa-banner--pilot__body",
+    "card_title_class_teg" : "usajobs-joa-banner__title",
+    "dep_name_class_teg" : "usajobs-joa-banner__dept",
+    "agency_name_class_teg" : "usajobs-joa-banner__agency usajobs-joa-banner--v1-3__agency",
+    "bullets_tag" : "usajobs-list-bullets"
+
+  },
+
+  "overview_fields" : {"TABLE_LIST": [ "telework_eligible",
+                    "travel_required",
+                    "relocation_expenses_reimbursed",
+                    "appointment_type",
+                    "work_schedule",
+                    "service",
+                    "promotion_potential",
+                    "security_clearance",
+                    "position_sensitivity_and_risk",
+                    "trust_determination_process",
+                    "requirements",
+                    "duties",
+                    "summary",
+                    "pay_scale_grade"],
+
+          "TEXT_FIELDS" : ["salary",
+                    "announcement_number",
+                    "open_closing_dates"],
+
+          "NUMERIC_FIELDS" : ["control_number"],
+
+          "BINARY_FIELDS" : ["supervisory_status",
+                    "drug_test"]},
+
+
+  "test_htmls": {
+    "locations_section" : "locations_section.html",
+    "job_card" : "test_job_card"
+  }
+
+
+}

@@ -1,9 +1,6 @@
 import grequests
 from bs4 import BeautifulSoup
 
-# URL_NAME = 'https://www.usajobs.gov/?c=opportunities'
-header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"}
-
 def local_file_open(filename):
     """
     Opens html file stored in the local directory
@@ -16,7 +13,7 @@ def local_file_open(filename):
 
 
 
-def single_url_open(url_name = 'https://www.usajobs.gov/?c=opportunities'):
+def single_url_open(url_name):
     """
     Opens web page at url_name
     Returns the soup of the whole page
@@ -38,7 +35,8 @@ def open_with_grequests(urls):
     """
     Opens the batch of hrefs with grequests and returns the list of pages paired with their numbers
     """
-    rs = (grequests.get(href, headers = header) for href in urls)
+    # rs = (grequests.get(href, headers = header) for href in urls)
+    rs = (grequests.get(href) for href in urls)
     # print(rs)
     pages = grequests.map(rs)
     return [page.content for page in pages]
