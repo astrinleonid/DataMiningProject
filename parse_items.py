@@ -1,6 +1,6 @@
 
 from database_class import text_prepare
-from main import config
+from service_setup import config, logger
 
 def parse_overview(soup):
     """
@@ -26,12 +26,15 @@ def parse_overview(soup):
         title_item = title_item.replace('%', ' ')
         title = ("_".join(title_item.strip().split())).lower()
         if title == 'job_family_series':
-            print("Label found JFS")
+            overview.update({'job_family_series' : parse_jfs(parameter)})
         elif title == 'locations':
             overview.update({'locations' : parse_locations(parameter)})
         else:
             value = [text_prepare(item.text) for item in parameter.find_all("p")]
-            overview.update({title: value[0]})
+            if len(value) > 0:
+                overview.update({title: value[0]})
+            else:
+                overview.update({title: ""})
 
     return overview
 
@@ -99,11 +102,26 @@ def parse_locations(soup):
     locations = []
     for parameter in soup.find_all('li'):
         loc = parameter.find('a')
-        if 'data-name' in loc.attrs:
+        if loc != None and 'data-name' in loc.attrs:
             loc_line = [name.strip().strip(',') for name in loc.attrs['data-name'].split()]
             (city, state) = (" ".join(loc_line[:-1]),loc_line[-1])
 
             locations.append({'city': city, 'state_ID': state})
 
-    print(len(locations))
     return locations
+
+def parse_jfs(soup):
+    """
+    Returns a list of Job Family (series) from a job card
+    """
+    jfss = []
+    for parameter in soup.find_all('a'):
+        if parameter != None :
+            jfs_line = [name.strip().strip(',') for name in parameter.text.split()]
+            (jfs_name, jfs_number) = (" ".join(jfs_line[1:]),jfs_line[0])
+            if jfs_number.isnumeric():
+                jfss.append({'name': jfs_name, 'num_index': jfs_number})
+            else:
+                jfss.append({'name': " ".join(jfs_number, jfs_name), 'num_index': '0'})
+
+    return jfss

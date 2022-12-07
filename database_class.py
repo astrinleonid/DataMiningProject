@@ -1,5 +1,6 @@
 import json
 import pymysql
+from service_setup import config,logger
 
 
 SQL_FILE = "usajobs_db_keepdb.sql"
@@ -33,7 +34,9 @@ class StorageDatabase:
         if mode == 'new':
             sql = 'DROP SCHEMA IF EXISTS `mydb`'
             with self.__connection__.cursor() as cursor:
+                self.sql_exec(sql, use = 'n')
                 cursor.execute(sql)
+        logger.info("\n\nOld database discarded")
 
         with open(filename) as file:
              sql_script = file.read().strip('; \n')
@@ -42,9 +45,10 @@ class StorageDatabase:
 
         with self.__connection__.cursor() as cursor:
             for sql in sqls:
-                cursor.execute(sql)
+                self.sql_exec(sql, use='n')
 
         print("Database created sucsessfully")
+        logger.info("\n\nDatabase created sucsessfully")
 
         if mode == 'new':
             with open('usstates.json', "r") as read_content:
@@ -53,13 +57,14 @@ class StorageDatabase:
                     self.table_add_row('states', {'state_id': code, 'name': state})
 
 
-    def sql_exec(self,sql,show = 'n', *kwargs):
+    def sql_exec(self,sql,show = 'n', use = 'u', *kwargs):
         """
         execute SQL quierty. if show == 'y' print the result to the standard output
         """
 
         with self.__connection__.cursor() as cursor:
-            cursor.execute(self.__USE__)
+            if use == 'u':
+                cursor.execute(self.__USE__)
             try:
                 cursor.execute(sql)
             except pymysql.err.ProgrammingError as er:
@@ -68,6 +73,9 @@ class StorageDatabase:
             except pymysql.err.DataError as er:
                 print(f"\n\n SQL failed on \n {sql}")
                 raise pymysql.err.DataError(er)
+            except pymysql.err.OperationalError as er:
+                print(f"\n\n SQL failed on \n {sql}")
+                raise pymysql.err.OperationalError(er)
             result = cursor.fetchall()
             res = []
             for item in result:
