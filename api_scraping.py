@@ -2,8 +2,6 @@ import requests
 import json
 import prettytable
 from service_setup import logger, config
-import numpy as np
-import pandas as pd
 
 DATA_TYPES = {"01":	"all_employees",
 "02":	"avg_weekly_hours",
