@@ -30,13 +30,7 @@ def parce_dates_text(text):
     """
     pass
 
-def parse_job_series(text):
-    """
-    Receives the text of the job series text field and returns a values
-    of the numeric code and a name as a tuple (integer, string)
-    """
 
-    pass
 
 def parse_travel_requirements(text):
     """
@@ -46,11 +40,6 @@ def parse_travel_requirements(text):
     """
     pass
 
-def parse_location(location):
-    """
-    Receives the text 
-
-    """
 
 
 
@@ -58,7 +47,7 @@ if __name__ == '__main__':
 
     assert parce_salary_text(SALARY_TEXT) == (56205, 152058)
     assert parce_dates_text(DATES_TEXT) == ('2021-12-01', '2022-11-30')
-    assert parse_job_series(JOB_FAMILY_SERIES) == (801,'General Engineering')
+
     for key, value in TRAVEL_REQUIRED:
         assert parse_travel_requirements(key) == value
 
