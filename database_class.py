@@ -53,8 +53,8 @@ class StorageDatabase:
         if mode == 'new':
             with open('usstates.json', "r") as read_content:
                 states_list = json.load(read_content)
-                for code, state in states_list.items():
-                    self.table_add_row('states', {'state_id': code, 'name': state})
+                for code, state in states_list['letter_codes'].items():
+                    self.table_add_row('states', {'state_id': code, 'name': state, 'ID': int(states_list['numeric_codes'][state])})
 
 
     def sql_exec(self,sql,show = 'n', use = 'u', *kwargs):
@@ -151,7 +151,7 @@ class StorageDatabase:
         Updates the row with the given value by ID
 
         """
-        sql = f'UPDATE {table} SET {column} = {value} WHERE ID = {ID}'
+        sql = f'UPDATE {table} SET {column} = "{text_prepare(value)}" WHERE ID = {ID}'
         res = self.sql_exec(sql)
         if len(res) > 0:
             return res[0]

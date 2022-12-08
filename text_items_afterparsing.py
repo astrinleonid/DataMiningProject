@@ -21,6 +21,7 @@ def parce_salary_text(text):
     Receives the text of the salary field and returns
     a tuple of two integers, representing minimum and maximum salary in dollars
     """
+    return (20000, 25000)
     pass
 
 def parce_dates_text(text):
@@ -28,6 +29,7 @@ def parce_dates_text(text):
     Receives the text of the dates field and returns
     a tuple of two strings recognized by SQL as date(in YYYY-MM-DD format)
     """
+    return ('2021-12-01', '2022-11-30')
     pass
 
 

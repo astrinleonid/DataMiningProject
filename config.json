@@ -2,7 +2,8 @@
   "pathes" : {
     "target_url": "https://www.usajobs.gov",
     "start_page": "https://www.usajobs.gov/?c=opportunities",
-    "page_num_parameter" : "&sort=enddate&page="},
+    "page_num_parameter" : "&sort=enddate&page=",
+    "API_access_url" : "https://api.bls.gov/publicAPI/v1/timeseries/data/"},
   "header": {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
   },

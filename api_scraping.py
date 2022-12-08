@@ -1,6 +1,7 @@
 import requests
 import json
 import prettytable
+from service_setup import logger, config
 import numpy as np
 import pandas as pd
 
@@ -26,14 +27,26 @@ MONTH_NAMES ={
 
 def get_data(state_id):
 
+    state_id = str(state_id).zfill(2)
     headers = {'Content-type': 'application/json'}
     result = {}
     for data_type in DATA_TYPES:
-        print(f"Data type : {data_type}, name : {DATA_TYPES[data_type]}")
+        logger.info(f"Data type : {data_type}, name : {DATA_TYPES[data_type]}")
         data = json.dumps({"seriesid": [f'SMU{state_id}0000005000000{data_type}'], "startyear": "2021", "endyear": "2021"})
-        p = requests.post('https://api.bls.gov/publicAPI/v1/timeseries/data/', data=data, headers=headers)
+        logger.debug(data)
+        try:
+            p = requests.post(config['pathes']['API_access_url'], data=data, headers=headers)
+        except Exception as er:
+            print("Cannot gain access to the site api.bls.gov/publicAPI")
+            logger.error(f"Cannot gain access to the site api.bls.gov/publicAPI, error {er}")
+            return result
+        logger.info(f"scraping API, request response {p}")
         json_data = json.loads(p.text)
-        print(json_data)
+        logger.debug(str(json_data))
+        if json_data['status'] != 'REQUEST_SUCCEEDED':
+            print("Cannot gain access to the site api.bls.gov/publicAPI")
+            logger.error(f"Cannot gain access to the site api.bls.gov/publicAPI, status {json_data['status']}")
+            return result
 
         for series in json_data['Results']['series']:
             x = prettytable.PrettyTable(["series id", "year", "period", "value", "footnotes"])
@@ -55,9 +68,6 @@ def get_data(state_id):
         result[period].update({'avg_yearly_salary' : avg_yearly_salary})
     return result
 
-        # output = open(seriesId + '.txt','w')
-        # output.write (x.get_string())
-        # output.close()
 
 
-print(get_data('02'))
+# print(get_data('02'))

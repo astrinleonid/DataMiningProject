@@ -1,12 +1,14 @@
 
 import argparse
 # import logging
-# import json
+import json
 # import sys
 from database_class import StorageDatabase
 from parse_items import *
 from greq_open import single_url_open, multiple_urls_open
 from service_setup import config, logger
+from text_items_afterparsing import *
+from api_scraping import get_data
 
 
 
@@ -217,7 +219,40 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
                             jobs.append(job_card)
 
                     sections[current_index][category_title].append({title.text.strip() : jobs})
+        db.db_commit()
 
+    len_db = db.current_no_of_records()
+    logger.info(f"Number of job card records in the database {len_db}")
+    # Afterparsing: splitting the text fields of salary and dates into the respective fields
+
+    for i in range(1,len_db+1):
+        date_record = db.table_get_value('job_card', i, 'open_closing_dates')
+        (start_date, end_date) = parce_dates_text(date_record)
+        db.table_update_row('job_card', i, 'end_date', end_date)
+        db.table_update_row('job_card', i, 'start_date', start_date)
+        salary_record = db.table_get_value('job_card', i, 'salary')
+        (start_salary, max_salary) = parce_salary_text(salary_record)
+        db.table_update_row('job_card', i, 'max_salary', max_salary)
+        db.table_update_row('job_card', i, 'start_salary', start_salary)
+
+    db.db_commit()
+    # Scraping API
+
+    with open('usstates.json', "r") as read_content:
+        states_list = json.load(read_content)
+    states = states_list['numeric_codes']
+    for state in states:
+        data = get_data(states[state])
+        if data == {}:
+            logger.error(f"Request unsucsessfull, breaking the cycle")
+            break
+        else:
+            state_ID = db.table_get_value('states', state, 'state_ID')
+            for period, values in data.items():
+                period_ID = db.table_update_row_return_id('periods', 'text', period, {'text' : period})
+
+                record = {'state_ID' : state_ID, 'period_id' : period_ID, **values}
+                db.table_add_row('stats_data', record)
 
     db.sql_exec("SELECT * FROM agencies LIMIT 3", 's')
     db.sql_exec("SELECT * FROM departments LIMIT 3", 's')
@@ -237,6 +272,8 @@ def main(limit, prof_area_param, db_mode, sql_password):
         logger.error(f"Failed to open URL, error : {er}")
         return
     sections = parse_sections(soup, limit, prof_area_param, db_mode, sql_password)
+
+
 
 if __name__ == "__main__":
 
