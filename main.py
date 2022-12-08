@@ -240,8 +240,7 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
 
     with open('usstates.json', "r") as read_content:
         states_list = json.load(read_content)
-    # states = states_list['numeric_codes']
-    states = {"OKLAHOMA": "40"}
+    states = states_list['numeric_codes']
     for state in states:
         data = get_data(states[state])
         if data == {}:
