@@ -247,7 +247,7 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
             logger.error(f"Request unsucsessfull, breaking the cycle")
             break
         else:
-            state_ID = db.table_get_value('states', state, 'state_ID')
+            state_ID = db.table_get_value('states', states[state], 'state_ID')
             for period, values in data.items():
                 period_ID = db.table_update_row_return_id('periods', 'text', period, {'text' : period})
 
