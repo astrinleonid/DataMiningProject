@@ -252,7 +252,7 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
             for period, values in data.items():
                 period_ID = db.table_update_row_return_id('periods', 'text', period, {'text' : period})
 
-                record = {'state_ID' : state_ID, 'period_id' : period_ID, **values}
+                record = {'state_ID' : state_ID['state_ID'], 'period_id' : period_ID, **values}
                 db.table_add_row('stat_data', record)
 
     db.sql_exec("SELECT * FROM agencies LIMIT 3", 's')
