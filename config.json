@@ -53,6 +53,12 @@
   "test_htmls": {
     "locations_section" : "locations_section.html",
     "job_card" : "test_job_card"
+  },
+  "database": {
+    "host" : "data-mining-db1.cttpnp4olbpx.us-west-1.rds.amazonaws.com",
+    "user" : "prem_leonid_richard",
+    "password" : "prem_leonid_richard",
+    "db_name" : "prem_leonid_richard"
   }
 
 

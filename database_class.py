@@ -3,6 +3,7 @@ import pymysql
 from service_setup import config,logger
 
 
+
 SQL_FILE = "usajobs_db_keepdb.sql"
 US_STATES = "usstates.json"
 
@@ -19,11 +20,17 @@ def text_prepare(value):
 class StorageDatabase:
 
     def __init__(self, mode, sql_password):
+        sql_host = 'localhost'
+        sql_user = 'root'
         if sql_password == 'from_file':
             with open('password.txt') as file:
                 sql_password = file.read()
-        self.__connection__ = pymysql.connect(host='localhost',
-                                              user='root',
+        if sql_password == 'aws':
+                sql_password = config['database']['password']
+                sql_host = config['database']['host']
+                sql_user = config['database']['user']
+        self.__connection__ = pymysql.connect(host=sql_host,
+                                              user=sql_user,
                                               password=sql_password,
                                               cursorclass=pymysql.cursors.DictCursor)
 

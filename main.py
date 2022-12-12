@@ -155,7 +155,7 @@ def get_card_list_at_prof_area(url_name, old_count, limit):
 
 
 
-def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly', sql_password = 'from_file'):
+def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly', sql_password = 'from_file', api_parsing = False):
 
     """
     Top level parser, parses the page with the list of the sections opportunities are grouped to topics.
@@ -250,27 +250,28 @@ def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly'
         states_list = json.load(read_content)
     states = states_list['numeric_codes']
 
+    if api_parsing:
+        for i, state in enumerate(states):
+            state_ID = db.table_get_value_with_ID('states', states[state], 'state_ID')
+            if len(db.table_find_values('stat_data', 'state_ID', state_ID['state_ID'], limit=1)) > 0:
+                print(f"Data for the state {state_ID} is already in the base")
+                continue
+            logger.info(f"Extracting info for the state {state_ID['state_ID']}")
+            data = {}
+            data = get_data(states[state])
+            if data == {}:
+                logger.error(f"Request unsucsessfull, breaking the cycle")
+                break
+            else:
+                logger.info(f"Extracting info for the state {state_ID['state_ID']} sucsessfull, writing the database")
+                for period, values in data.items():
 
-    for i, state in enumerate(states):
-        state_ID = db.table_get_value_with_ID('states', states[state], 'state_ID')
-        if len(db.table_find_values('stat_data', 'state_ID', state_ID['state_ID'], limit=1)) > 0:
-            print(f"Data for the state {state_ID} is already in the base")
-            continue
-        logger.info(f"Extracting info for the state {state_ID['state_ID']}")
-        data = get_data(states[state])
-        if data == {}:
-            logger.error(f"Request unsucsessfull, breaking the cycle")
-            break
-        else:
-            logger.info(f"Extracting info for the state {state_ID['state_ID']} sucsessfull, writing the database")
-            for period, values in data.items():
+                    period_ID = db.table_update_row_return_id('periods', 'text', period, {'text' : period})
 
-                period_ID = db.table_update_row_return_id('periods', 'text', period, {'text' : period})
+                    record = {'state_ID' : state_ID['state_ID'], 'period_id' : period_ID, **values}
+                    db.table_add_row('stat_data', record)
 
-                record = {'state_ID' : state_ID['state_ID'], 'period_id' : period_ID, **values}
-                db.table_add_row('stat_data', record)
-
-        db.db_commit()
+            db.db_commit()
 
     db.sql_exec("SELECT * FROM agencies LIMIT 3", 's')
     db.sql_exec("SELECT * FROM departments LIMIT 3", 's')
@@ -279,7 +280,7 @@ def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly'
     db.sql_exec("SELECT * FROM professional_area LIMIT 3", 's')
 
 
-def main(limit, prof_area_param, db_mode, sql_password):
+def main(limit, prof_area_param, db_mode, sql_password, api_parsing):
     if db_mode == 'afterparse' :
         sections = parse_sections([], limit, prof_area_param, db_mode, sql_password)
     try:
@@ -289,7 +290,7 @@ def main(limit, prof_area_param, db_mode, sql_password):
         print(f"Failed to open URL, error : {er}")
         logger.error(f"Failed to open URL, error : {er}")
         return
-    sections = parse_sections(soup, limit, prof_area_param, db_mode, sql_password)
+    sections = parse_sections(soup, limit, prof_area_param, db_mode, sql_password, api_parsing)
 
 
 
@@ -301,12 +302,13 @@ if __name__ == "__main__":
     parser.add_argument('-p', dest='sql_password', type=str, default='from_file', help='Enter your mysql root password')
     parser.add_argument('-l', type=int, default=-1, help='Limit number of cards parsed per section')
     parser.add_argument('-m', choices=['keep','new','checkonly','afterparse'], default='keep', help='keep to use existing database, new to drop it and start a new one, checkonly to track changes without parsing')
+    parser.add_argument('-a', action= 'store_true' )
 
     args = parser.parse_args()
 
     section_name = " ".join(args.section_name.split('_'))
     logger.info(f"Parsing usajobs.gov, section : {section_name} mode : {args.m}")
-    main(args.l, section_name, args.m, args.sql_password)
+    main(args.l, section_name, args.m, args.sql_password, args.a)
 
 
 
