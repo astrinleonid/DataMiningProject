@@ -26,7 +26,10 @@ def parce_salary_text(text):
     Receives the text of the salary field and returns
     a tuple of two integers, representing minimum and maximum salary in dollars
     """
-    range_from, range_to = re.sub("[^$0-9]", "", text).split('$')[1::]
+    range_from = float(re.sub("[$,]", "", (text.split('per year')[0].split()[0])))
+    range_to = float(re.sub("[$,]", "", (text.split('per year')[0].split()[2])))
+
+    # range_from, range_to = re.sub("[^$0-9]", "", text).split('$')[1::]
     return range_from, range_to
 
 def parce_dates_text(d):
