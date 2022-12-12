@@ -127,7 +127,7 @@ class StorageDatabase:
         res = self.sql_exec(sql)
         return res
 
-    def table_get_value(self, table, ID, column):
+    def table_get_value_with_ID(self, table, ID, column):
         """
         Returns value in the row by ID
 
@@ -136,6 +136,18 @@ class StorageDatabase:
         res = self.sql_exec(sql)
         if len(res) > 0:
             return res[0]
+        else:
+            return []
+
+    def table_find_values(self, table, column, value, limit = 1):
+        """
+        Returns value in the row by ID
+
+        """
+        sql = f'SELECT * FROM {table}  WHERE {column} = "{value}" LIMIT {limit}'
+        res = self.sql_exec(sql)
+        if len(res) > 0:
+            return res
         else:
             return []
 

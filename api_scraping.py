@@ -8,6 +8,7 @@ DATA_TYPES = {"01":	"all_employees",
 "03":	"avg_hour_earnings",
 "11":	"avg_week_earnings",
 }
+
 MONTH_NAMES ={
 "M01" : "January",
     "M02" : "February",
@@ -37,7 +38,7 @@ def get_data(state_id):
         except Exception as er:
             print("Cannot gain access to the site api.bls.gov/publicAPI")
             logger.error(f"Cannot gain access to the site api.bls.gov/publicAPI, error {er}")
-            return result
+            return {}
         logger.info(f"scraping API, request response {p}")
         json_data = json.loads(p.text)
         logger.debug(str(json_data))
@@ -64,6 +65,7 @@ def get_data(state_id):
     for period, values in result.items():
         avg_yearly_salary = float(values['avg_week_earnings']) * 50
         result[period].update({'avg_yearly_salary' : avg_yearly_salary})
+
     return result
 
 

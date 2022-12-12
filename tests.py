@@ -23,8 +23,8 @@ def tests():
     db.table_add_row('category', {'title' : "some category 7"})
     db.table_add_row('professional_area', {'title' : "some professional area", 'category_id' : 1})
     print(db.sql_exec("SELECT * FROM professional_area", 's') )
-    assert db.table_get_value('departments', 1, 'name') == {'name': 'some dept 5'}
-    assert db.table_get_value('professional_area', 1, 'num_records')['num_records'] == 0
+    assert db.table_get_value_with_ID('departments', 1, 'name') == {'name': 'some dept 5'}
+    assert db.table_get_value_with_ID('professional_area', 1, 'num_records')['num_records'] == 0
 
     soup = single_url_open("https://www.usajobs.gov/job/683987500")
     titles = parse_card_header(soup)

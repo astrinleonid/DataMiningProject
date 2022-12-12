@@ -142,7 +142,7 @@ def get_card_list_at_prof_area(url_name, old_count, limit):
 
 
 
-def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', sql_password = 'from_file'):
+def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly', sql_password = 'from_file'):
 
     """
     Top level parser, parses the page with the list of the sections opportunities are grouped to topics.
@@ -186,8 +186,8 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
                                                                 {'title': professional_area,
                                                                 'category_id': category_id})
 
-            old_count = db.table_get_value('professional_area', professional_area_id, 'num_records')['num_records']
-            old_control_no = db.table_get_value('professional_area', professional_area_id, 'control_sum')['control_sum']
+            old_count = db.table_get_value_with_ID('professional_area', professional_area_id, 'num_records')['num_records']
+            old_control_no = db.table_get_value_with_ID('professional_area', professional_area_id, 'control_sum')['control_sum']
 
             (details_urls, count, control_no) = get_card_list_at_prof_area(card_url, old_count, limit)
 
@@ -226,12 +226,12 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
     # Afterparsing: splitting the text fields of salary and dates into the respective fields
 
     for i in range(1,len_db+1):
-        date_record = db.table_get_value('job_card', i, 'open_closing_dates')
-        (start_date, end_date) = parce_dates_text(date_record)
+        date_record = db.table_get_value_with_ID('job_card', i, 'open_closing_dates')
+        (start_date, end_date) = parce_dates_text(date_record['open_closing_dates'])
         db.table_update_row('job_card', i, 'end_date', end_date)
         db.table_update_row('job_card', i, 'start_date', start_date)
-        salary_record = db.table_get_value('job_card', i, 'salary')
-        (start_salary, max_salary) = parce_salary_text(salary_record)
+        salary_record = db.table_get_value_with_ID('job_card', i, 'salary')
+        (start_salary, max_salary) = parce_salary_text(salary_record['salary'])
         db.table_update_row('job_card', i, 'max_salary', max_salary)
         db.table_update_row('job_card', i, 'start_salary', start_salary)
 
@@ -242,18 +242,27 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
         states_list = json.load(read_content)
     states = states_list['numeric_codes']
 
-    for state in states:
+
+    for i, state in enumerate(states):
+        state_ID = db.table_get_value_with_ID('states', states[state], 'state_ID')
+        if len(db.table_find_values('stat_data', 'state_ID', state_ID['state_ID'], limit=1)) > 0:
+            print(f"Data for the state {state_ID} is already in the base")
+            continue
+        logger.info(f"Extracting info for the state {state_ID['state_ID']}")
         data = get_data(states[state])
         if data == {}:
             logger.error(f"Request unsucsessfull, breaking the cycle")
             break
         else:
-            state_ID = db.table_get_value('states', states[state], 'state_ID')
+            logger.info(f"Extracting info for the state {state_ID['state_ID']} sucsessfull, writing the database")
             for period, values in data.items():
+
                 period_ID = db.table_update_row_return_id('periods', 'text', period, {'text' : period})
 
                 record = {'state_ID' : state_ID['state_ID'], 'period_id' : period_ID, **values}
                 db.table_add_row('stat_data', record)
+
+        db.db_commit()
 
     db.sql_exec("SELECT * FROM agencies LIMIT 3", 's')
     db.sql_exec("SELECT * FROM departments LIMIT 3", 's')
@@ -261,7 +270,6 @@ def parse_sections(soup,limit = -1, prof_area_param = '',db_mode = 'checkonly', 
     db.sql_exec("SELECT * FROM states LIMIT 3", 's')
     db.sql_exec("SELECT * FROM professional_area LIMIT 3", 's')
 
-    db.db_commit()
 
 def main(limit, prof_area_param, db_mode, sql_password):
 
