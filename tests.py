@@ -4,7 +4,7 @@ import json
 from parse_items import *
 from text_items_afterparsing import *
 from greq_open import local_file_open, single_url_open
-from main import parse_job_card
+from USJscrape import parse_job_card
 
 def tests():
 

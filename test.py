@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from main import html_open, parse_card_header, parse_job_card
+from USJscrape import html_open, parse_card_header, parse_job_card
 
 URL_NAME = "https://www.usajobs.gov/job/683987500"
 
