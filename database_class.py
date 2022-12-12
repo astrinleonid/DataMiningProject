@@ -27,12 +27,12 @@ class StorageDatabase:
                                               password=sql_password,
                                               cursorclass=pymysql.cursors.DictCursor)
 
-        self.__USE__ = "USE mydb"
+        self.__USE__ = "USE prem_leonid_richard"
         self.__SH_T__ = "SHOW TABLES"
         filename = SQL_FILE
 
         if mode == 'new':
-            sql = 'DROP SCHEMA IF EXISTS `mydb`'
+            sql = 'DROP SCHEMA IF EXISTS `prem_leonid_richard`'
             with self.__connection__.cursor() as cursor:
                 self.sql_exec(sql, use = 'n')
                 cursor.execute(sql)

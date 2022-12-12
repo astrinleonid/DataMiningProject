@@ -8,19 +8,19 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 -- -----------------------------------------------------
--- Schema mydb
+-- Schema prem_leonid_richard
 -- -----------------------------------------------------
 
 -- -----------------------------------------------------
--- Schema mydb
+-- Schema prem_leonid_richard
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8 ;
-USE `mydb` ;
+CREATE SCHEMA IF NOT EXISTS `prem_leonid_richard` DEFAULT CHARACTER SET utf8 ;
+USE `prem_leonid_richard` ;
 
 -- -----------------------------------------------------
--- Table `mydb`.`agencies`
+-- Table `prem_leonid_richard`.`agencies`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`agencies` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`agencies` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(100) NULL,
   `department` INT NULL COMMENT 'Refers to the departments table',
@@ -32,16 +32,16 @@ CREATE TABLE IF NOT EXISTS `mydb`.`agencies` (
   INDEX `department_idx` (`department` ASC) VISIBLE,
   CONSTRAINT `department`
     FOREIGN KEY (`department`)
-    REFERENCES `mydb`.`departments` (`ID`)
+    REFERENCES `prem_leonid_richard`.`departments` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`appointment_type`
+-- Table `prem_leonid_richard`.`appointment_type`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`appointment_type` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`appointment_type` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(450) NULL,
   `permanent` INT NULL COMMENT 'General - if it is permanent or temporary',
@@ -51,9 +51,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`category`
+-- Table `prem_leonid_richard`.`category`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`category` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`category` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(45) NULL,
   PRIMARY KEY (`ID`))
@@ -61,9 +61,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`departments`
+-- Table `prem_leonid_richard`.`departments`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`departments` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`departments` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(100) NULL,
   PRIMARY KEY (`ID`))
@@ -71,9 +71,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`duties`
+-- Table `prem_leonid_richard`.`duties`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`duties` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`duties` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(5000) NULL,
   PRIMARY KEY (`ID`))
@@ -81,9 +81,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`job_card`
+-- Table `prem_leonid_richard`.`job_card`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`job_card` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`job_card` (
   `ID` INT NOT NULL AUTO_INCREMENT COMMENT 'Auto - increment ID of the card',
   `name` VARCHAR(200) NOT NULL COMMENT 'Title of the position\n',
   `agency_id` INT NOT NULL COMMENT 'Agency ID refers to the agency in the table agencies\n',
@@ -135,91 +135,91 @@ CREATE TABLE IF NOT EXISTS `mydb`.`job_card` (
   INDEX `summary_idx` (`summary_id` ASC) VISIBLE,
   CONSTRAINT `scale_grade`
     FOREIGN KEY (`pay_scale_grade_id`)
-    REFERENCES `mydb`.`pay_scale_grade` (`ID`)
+    REFERENCES `prem_leonid_richard`.`pay_scale_grade` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `telework`
     FOREIGN KEY (`telework_eligible_id`)
-    REFERENCES `mydb`.`telework_eligible` (`ID`)
+    REFERENCES `prem_leonid_richard`.`telework_eligible` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `travel`
     FOREIGN KEY (`travel_required_id`)
-    REFERENCES `mydb`.`travel_required` (`ID`)
+    REFERENCES `prem_leonid_richard`.`travel_required` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `reloc`
     FOREIGN KEY (`relocation_expenses_reimbursed_id`)
-    REFERENCES `mydb`.`relocation_expenses_reimbursed` (`ID`)
+    REFERENCES `prem_leonid_richard`.`relocation_expenses_reimbursed` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `appointment`
     FOREIGN KEY (`appointment_type_id`)
-    REFERENCES `mydb`.`appointment_type` (`ID`)
+    REFERENCES `prem_leonid_richard`.`appointment_type` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `work_sch`
     FOREIGN KEY (`work_schedule_id`)
-    REFERENCES `mydb`.`work_schedule` (`ID`)
+    REFERENCES `prem_leonid_richard`.`work_schedule` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `service`
     FOREIGN KEY (`service_id`)
-    REFERENCES `mydb`.`service` (`ID`)
+    REFERENCES `prem_leonid_richard`.`service` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `prom_poten`
     FOREIGN KEY (`promotion_potential_id`)
-    REFERENCES `mydb`.`promotion_potential` (`ID`)
+    REFERENCES `prem_leonid_richard`.`promotion_potential` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `security`
     FOREIGN KEY (`security_clearance_id`)
-    REFERENCES `mydb`.`security_clearance` (`ID`)
+    REFERENCES `prem_leonid_richard`.`security_clearance` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `sens_trust`
     FOREIGN KEY (`position_sensitivity_and_risk_id`)
-    REFERENCES `mydb`.`position_sensitivity_and_risk` (`ID`)
+    REFERENCES `prem_leonid_richard`.`position_sensitivity_and_risk` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `trust`
     FOREIGN KEY (`trust_determination_process_id`)
-    REFERENCES `mydb`.`trust_determination_process` (`ID`)
+    REFERENCES `prem_leonid_richard`.`trust_determination_process` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `agency`
     FOREIGN KEY (`agency_id`)
-    REFERENCES `mydb`.`agencies` (`ID`)
+    REFERENCES `prem_leonid_richard`.`agencies` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `requirements`
     FOREIGN KEY (`requirements_id`)
-    REFERENCES `mydb`.`requirements` (`ID`)
+    REFERENCES `prem_leonid_richard`.`requirements` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `prof_area`
     FOREIGN KEY (`professional_area`)
-    REFERENCES `mydb`.`professional_area` (`ID`)
+    REFERENCES `prem_leonid_richard`.`professional_area` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `duties`
     FOREIGN KEY (`duties_id`)
-    REFERENCES `mydb`.`duties` (`ID`)
+    REFERENCES `prem_leonid_richard`.`duties` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `summary`
     FOREIGN KEY (`summary_id`)
-    REFERENCES `mydb`.`summary` (`ID`)
+    REFERENCES `prem_leonid_richard`.`summary` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`job_family_and_card`
+-- Table `prem_leonid_richard`.`job_family_and_card`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`job_family_and_card` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`job_family_and_card` (
   `job_card_id` INT NOT NULL,
   `job_family_series_id` INT NULL,
   `jfs_num_index` INT NULL,
@@ -227,21 +227,21 @@ CREATE TABLE IF NOT EXISTS `mydb`.`job_family_and_card` (
   INDEX `job_family_idx` (`job_family_series_id` ASC) VISIBLE,
   CONSTRAINT `job_card`
     FOREIGN KEY (`job_card_id`)
-    REFERENCES `mydb`.`job_card` (`ID`)
+    REFERENCES `prem_leonid_richard`.`job_card` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `job_family`
     FOREIGN KEY (`job_family_series_id`)
-    REFERENCES `mydb`.`job_family_series` (`ID`)
+    REFERENCES `prem_leonid_richard`.`job_family_series` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`job_family_series`
+-- Table `prem_leonid_richard`.`job_family_series`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`job_family_series` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`job_family_series` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(450) NULL,
   `num_index` INT NULL,
@@ -251,9 +251,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`locations`
+-- Table `prem_leonid_richard`.`locations`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`locations` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`locations` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `city` VARCHAR(45) NULL,
   `lat` VARCHAR(45) NULL,
@@ -263,16 +263,16 @@ CREATE TABLE IF NOT EXISTS `mydb`.`locations` (
   INDEX `state_idx` (`state_ID` ASC) VISIBLE,
   CONSTRAINT `state_ref`
     FOREIGN KEY (`state_ID`)
-    REFERENCES `mydb`.`states` (`state_ID`)
+    REFERENCES `prem_leonid_richard`.`states` (`state_ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`pay_scale_grade`
+-- Table `prem_leonid_richard`.`pay_scale_grade`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`pay_scale_grade` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`pay_scale_grade` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`ID`))
@@ -280,9 +280,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`periods`
+-- Table `prem_leonid_richard`.`periods`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`periods` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`periods` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(45) NULL,
   `timestamp` DATETIME NULL,
@@ -291,30 +291,30 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`pos_at_loc`
+-- Table `prem_leonid_richard`.`pos_at_loc`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`pos_at_loc` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`pos_at_loc` (
   `job_card_id` INT NOT NULL,
   `location_id` INT NOT NULL,
   `num_of_vacancies` INT NULL,
   INDEX `location_idx` (`location_id` ASC) VISIBLE,
   CONSTRAINT `position`
     FOREIGN KEY (`job_card_id`)
-    REFERENCES `mydb`.`job_card` (`ID`)
+    REFERENCES `prem_leonid_richard`.`job_card` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `location`
     FOREIGN KEY (`location_id`)
-    REFERENCES `mydb`.`locations` (`ID`)
+    REFERENCES `prem_leonid_richard`.`locations` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`position_sensitivity_and_risk`
+-- Table `prem_leonid_richard`.`position_sensitivity_and_risk`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`position_sensitivity_and_risk` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`position_sensitivity_and_risk` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(45) NULL,
   PRIMARY KEY (`ID`))
@@ -322,9 +322,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`professional_area`
+-- Table `prem_leonid_richard`.`professional_area`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`professional_area` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`professional_area` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(45) NULL,
   `category_id` INT NULL,
@@ -334,16 +334,16 @@ CREATE TABLE IF NOT EXISTS `mydb`.`professional_area` (
   INDEX `category_idx` (`category_id` ASC) VISIBLE,
   CONSTRAINT `category`
     FOREIGN KEY (`category_id`)
-    REFERENCES `mydb`.`category` (`ID`)
+    REFERENCES `prem_leonid_richard`.`category` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`promotion_potential`
+-- Table `prem_leonid_richard`.`promotion_potential`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`promotion_potential` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`promotion_potential` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(450) NOT NULL,
   `level` INT NULL,
@@ -352,9 +352,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`relocation_expenses_reimbursed`
+-- Table `prem_leonid_richard`.`relocation_expenses_reimbursed`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`relocation_expenses_reimbursed` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`relocation_expenses_reimbursed` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(450) NULL,
   `gen_yesno` INT NULL,
@@ -363,9 +363,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`requirements`
+-- Table `prem_leonid_richard`.`requirements`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`requirements` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`requirements` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(5000) NULL,
   PRIMARY KEY (`ID`))
@@ -373,9 +373,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`security_clearance`
+-- Table `prem_leonid_richard`.`security_clearance`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`security_clearance` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`security_clearance` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(45) NULL,
   PRIMARY KEY (`ID`))
@@ -383,9 +383,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`service`
+-- Table `prem_leonid_richard`.`service`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`service` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`service` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(45) NULL,
   PRIMARY KEY (`ID`))
@@ -393,9 +393,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`stat_data`
+-- Table `prem_leonid_richard`.`stat_data`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`stat_data` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`stat_data` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `all_employees` DECIMAL(9) NULL,
   `avg_weekly_hours` DECIMAL(9) NULL,
@@ -409,21 +409,21 @@ CREATE TABLE IF NOT EXISTS `mydb`.`stat_data` (
   INDEX `period_idx` (`period_id` ASC) VISIBLE,
   CONSTRAINT `state`
     FOREIGN KEY (`state_ID`)
-    REFERENCES `mydb`.`states` (`state_ID`)
+    REFERENCES `prem_leonid_richard`.`states` (`state_ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `period`
     FOREIGN KEY (`period_id`)
-    REFERENCES `mydb`.`periods` (`ID`)
+    REFERENCES `prem_leonid_richard`.`periods` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`states`
+-- Table `prem_leonid_richard`.`states`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`states` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`states` (
   `ID` INT NULL,
   `state_ID` VARCHAR(3) NOT NULL,
   `name` VARCHAR(45) NULL,
@@ -432,9 +432,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`summary`
+-- Table `prem_leonid_richard`.`summary`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`summary` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`summary` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(5000) NULL,
   PRIMARY KEY (`ID`))
@@ -442,9 +442,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`telework_eligible`
+-- Table `prem_leonid_richard`.`telework_eligible`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`telework_eligible` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`telework_eligible` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(450) NOT NULL,
   `eligibility` INT NULL,
@@ -453,9 +453,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`travel_required`
+-- Table `prem_leonid_richard`.`travel_required`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`travel_required` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`travel_required` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(600) NULL,
   `general_yes_no` INT NULL,
@@ -465,9 +465,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`trust_determination_process`
+-- Table `prem_leonid_richard`.`trust_determination_process`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`trust_determination_process` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`trust_determination_process` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(45) NULL,
   PRIMARY KEY (`ID`))
@@ -475,9 +475,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`work_schedule`
+-- Table `prem_leonid_richard`.`work_schedule`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`work_schedule` (
+CREATE TABLE IF NOT EXISTS `prem_leonid_richard`.`work_schedule` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `text` VARCHAR(450) NULL,
   `full_time` INT NULL COMMENT 'Is it full-time (yes/no)',

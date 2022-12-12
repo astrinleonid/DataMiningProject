@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from database_class import *
 import json
 from parse_items import *
+from text_items_afterparsing import *
 from greq_open import local_file_open, single_url_open
 from main import parse_job_card
 
@@ -61,8 +62,14 @@ def tests():
     assert result[0] == {'city': 'Mobile', 'state_ID': 'AL'}
 
 
+def test_sal(salary):
+    print(parce_salary_text(salary))
+
+
 if __name__ == '__main__':
     with open("config.json", "r") as config_file:
         config = json.load(config_file)
     print(config['overview_fields']['TABLE_LIST'][5])
-    tests()
+    # tests()
+    test_sal("""$89,076 - $115,803 per year
+                                            PLEASE NOTE: In addition to the salary shown above, the salary for this position will also include a COLA of 2.48% (2022) for Juneau, Alaska.""")
