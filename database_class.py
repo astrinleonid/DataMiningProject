@@ -54,8 +54,8 @@ class StorageDatabase:
             for sql in sqls:
                 self.sql_exec(sql, use='n')
 
-        print("Database created sucsessfully")
-        logger.info("\n\nDatabase created sucsessfully")
+        print("Database opened sucsessfully")
+        logger.info("\n\nDatabase opened sucsessfully")
 
         if mode == 'new':
             with open('usstates.json', "r") as read_content:

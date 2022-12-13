@@ -48,13 +48,14 @@ def get_data(state_id):
             return result
 
         for series in json_data['Results']['series']:
+            print(f"Getting data from API, series : {series}")
+            logger.info(f"Getting data from API, series : {series}")
             x = prettytable.PrettyTable(["series id", "year", "period", "value", "footnotes"])
             seriesId = series['seriesID']
             for item in series['data']:
                 year = item['year']
                 period = item['period']
                 value = item['value']
-                print(f"Period : {period}, value : {value}")
                 if 'M01' <= period <= 'M12':
                     period_and_year = f"{year}, {MONTH_NAMES[period]}"
                     if period_and_year not in result:
