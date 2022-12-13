@@ -21,13 +21,18 @@ def afterparse(db):
 
     for i in range(1, len_db + 1):
         date_record = db.table_get_value_with_ID('job_card', i, 'open_closing_dates')
-        (start_date, end_date) = parce_dates_text(date_record['open_closing_dates'])
-        db.table_update_row('job_card', i, 'end_date', end_date)
-        db.table_update_row('job_card', i, 'start_date', start_date)
-        salary_record = db.table_get_value_with_ID('job_card', i, 'salary')
-        (start_salary, max_salary) = parce_salary_text(salary_record['salary'])
-        db.table_update_row('job_card', i, 'max_salary', max_salary)
-        db.table_update_row('job_card', i, 'start_salary', start_salary)
+        if len(date_record) > 0:
+
+            (start_date, end_date) = parce_dates_text(date_record['open_closing_dates'])
+            logger.debug(f"Afterparsing: ID {i} Dates start {start_date} end {end_date} ")
+            db.table_update_row('job_card', i, 'end_date', end_date)
+            db.table_update_row('job_card', i, 'start_date', start_date)
+
+            salary_record = db.table_get_value_with_ID('job_card', i, 'salary')
+            (start_salary, max_salary) = parce_salary_text(salary_record['salary'])
+            logger.debug(f"Afterparsing: ID {i} Salary start {start_salary} max {max_salary} ")
+            db.table_update_row('job_card', i, 'max_salary', max_salary)
+            db.table_update_row('job_card', i, 'start_salary', start_salary)
 def parse_job_card(details, professional_area_id, db):
     """
     Parse individual page of the job announcement
@@ -167,6 +172,7 @@ def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly'
 
     if db_mode == 'afterparse':
         afterparse(db)
+        db.db_commit()
         return
 
 
@@ -240,9 +246,6 @@ def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly'
                     sections[current_index][category_title].append({title.text.strip() : jobs})
         db.db_commit()
 
-    # Afterparsing: splitting the text fields of salary and dates into the respective fields
-    # afterparse(db)
-
     db.db_commit()
     # Scraping API
 
@@ -283,6 +286,7 @@ def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly'
 def main(limit, prof_area_param, db_mode, sql_password, api_parsing):
     if db_mode == 'afterparse' :
         sections = parse_sections([], limit, prof_area_param, db_mode, sql_password)
+        return
     try:
         soup = single_url_open(config['pathes']["start_page"])
     except FileNotFoundError as er:
@@ -299,10 +303,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-s', dest='section_name', type=str, default='', help='Limit parsing to one section (professional area). Use _ instead of space')
-    parser.add_argument('-p', dest='sql_password', type=str, default='from_file', help='Enter your mysql root password')
+    parser.add_argument('-p', dest='sql_password', type=str, default='from_file', help='Enter your local mysql root password or enter aws to use preconfigured cloud')
     parser.add_argument('-l', type=int, default=-1, help='Limit number of cards parsed per section')
-    parser.add_argument('-m', choices=['keep','new','checkonly','afterparse'], default='keep', help='keep to use existing database, new to drop it and start a new one, checkonly to track changes without parsing')
-    parser.add_argument('-a', action= 'store_true' )
+    parser.add_argument('-m', choices=['keep','new','checkonly','afterparse'], default='keep', help='keep to use existing database, new to drop it and start a new one, checkonly to track changes without parsing, afterparse to fill in derived fields in the database')
+    parser.add_argument('-a', action= 'store_true', help='use this option to parse national statistics with API' )
 
     args = parser.parse_args()
 

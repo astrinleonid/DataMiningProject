@@ -43,7 +43,7 @@ class StorageDatabase:
             with self.__connection__.cursor() as cursor:
                 self.sql_exec(sql, use = 'n')
                 cursor.execute(sql)
-        logger.info("\n\nOld database discarded")
+            logger.info("\n\nOld database discarded")
 
         with open(filename) as file:
              sql_script = file.read().strip('; \n')
