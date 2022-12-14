@@ -266,9 +266,12 @@ def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly'
     with open('usstates.json', "r") as read_content:
         states_list = json.load(read_content)
     states = states_list['numeric_codes']
+    # states = {"ALASKA" : "02"}
 
     if api_parsing:
         for i, state in enumerate(states):
+            if states[state] == "00":
+                continue
             state_ID = db.table_get_value_with_ID('states', states[state], 'state_ID')
             if len(db.table_find_values('stat_data', 'state_ID', state_ID['state_ID'], limit=1)) > 0:
                 print(f"Data for the state {state_ID} is already in the base")
@@ -290,11 +293,11 @@ def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly'
 
             db.db_commit()
 
-    db.sql_exec("SELECT * FROM agencies LIMIT 3", 's')
-    db.sql_exec("SELECT * FROM departments LIMIT 3", 's')
-    db.sql_exec("SELECT * FROM locations LIMIT 3", 's')
-    db.sql_exec("SELECT * FROM states LIMIT 3", 's')
-    db.sql_exec("SELECT * FROM professional_area LIMIT 3", 's')
+    # db.sql_exec("SELECT * FROM agencies LIMIT 3", 's')
+    # db.sql_exec("SELECT * FROM departments LIMIT 3", 's')
+    # db.sql_exec("SELECT * FROM locations LIMIT 3", 's')
+    # db.sql_exec("SELECT * FROM states LIMIT 3", 's')
+    # db.sql_exec("SELECT * FROM professional_area LIMIT 3", 's')
 
 
 def main(limit, prof_area_param, db_mode, sql_password, api_parsing):

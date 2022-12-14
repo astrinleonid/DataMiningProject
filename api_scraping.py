@@ -29,39 +29,42 @@ def get_data(state_id):
     state_id = str(state_id).zfill(2)
     headers = {'Content-type': 'application/json'}
     result = {}
+    series_ids = []
     for data_type in DATA_TYPES:
+        series_ids.append(f'SMU{state_id}0000005000000{data_type}')
         logger.info(f"Data type : {data_type}, name : {DATA_TYPES[data_type]}")
-        data = json.dumps({"seriesid": [f'SMU{state_id}0000005000000{data_type}'], "startyear": "2021", "endyear": "2021"})
-        logger.debug(data)
-        try:
-            p = requests.post(config['pathes']['API_access_url'], data=data, headers=headers)
-        except Exception as er:
-            print("Cannot gain access to the site api.bls.gov/publicAPI")
-            logger.error(f"Cannot gain access to the site api.bls.gov/publicAPI, error {er}")
-            return {}
-        logger.info(f"scraping API, request response {p}")
-        json_data = json.loads(p.text)
-        logger.debug(str(json_data))
-        if json_data['status'] != 'REQUEST_SUCCEEDED':
-            print("Cannot gain access to the site api.bls.gov/publicAPI")
-            logger.error(f"Cannot gain access to the site api.bls.gov/publicAPI, status {json_data['status']}")
-            return result
+    data = json.dumps({"seriesid": series_ids, "startyear": "2021", "endyear": "2021"})
+    logger.debug(data)
+    try:
+        p = requests.post(config['pathes']['API_access_url'], data=data, headers=headers)
+    except Exception as er:
+        print("Cannot gain access to the site api.bls.gov/publicAPI")
+        logger.error(f"Cannot gain access to the site api.bls.gov/publicAPI, error {er}")
+        return {}
+    logger.info(f"scraping API, request response {p}")
+    json_data = json.loads(p.text)
+    logger.debug(str(json_data))
+    if json_data['status'] != 'REQUEST_SUCCEEDED':
+        print("Cannot gain access to the site api.bls.gov/publicAPI")
+        logger.error(f"Cannot gain access to the site api.bls.gov/publicAPI, status {json_data['status']}")
+        return result
 
-        for series in json_data['Results']['series']:
-            print(f"Getting data from API, series : {series}")
-            logger.info(f"Getting data from API, series : {series}")
-            x = prettytable.PrettyTable(["series id", "year", "period", "value", "footnotes"])
-            seriesId = series['seriesID']
-            for item in series['data']:
-                year = item['year']
-                period = item['period']
-                value = item['value']
-                if 'M01' <= period <= 'M12':
-                    period_and_year = f"{year}, {MONTH_NAMES[period]}"
-                    if period_and_year not in result:
-                        result[period_and_year] = {DATA_TYPES[data_type] : value}
-                    else:
-                        result[period_and_year].update({DATA_TYPES[data_type]: value})
+    for series in json_data['Results']['series']:
+
+        logger.info(f"Getting data from API, series : {series}")
+        x = prettytable.PrettyTable(["series id", "year", "period", "value", "footnotes"])
+        seriesId = series['seriesID']
+        data_type = seriesId[-2:]
+        for item in series['data']:
+            year = item['year']
+            period = item['period']
+            value = item['value']
+            if 'M01' <= period <= 'M12':
+                period_and_year = f"{year}, {MONTH_NAMES[period]}"
+                if period_and_year not in result:
+                    result[period_and_year] = {DATA_TYPES[data_type] : value}
+                else:
+                    result[period_and_year].update({DATA_TYPES[data_type]: value})
 
     for period, values in result.items():
         avg_yearly_salary = float(values['avg_week_earnings']) * 50

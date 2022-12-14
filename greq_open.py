@@ -41,10 +41,12 @@ def open_with_grequests(urls):
 
     pages = grequests.map(rs)
     logger.info(f"Reguested URLs open, responses {pages}")
-    for page in pages:
-        if page.status_code != 200:
-            raise FileNotFoundError (f"Failed to open url, status {page.status_code}")
-    return [page.content for page in pages]
-
+    if len(pages) > 0:
+        for page in pages:
+            if page.status_code != 200:
+                raise FileNotFoundError (f"Failed to open url, status {page.status_code}")
+        return [page.content for page in pages]
+    else:
+        raise FileNotFoundError (f"Failed to open url, empty response")
 
 # print(single_url_open())
