@@ -214,8 +214,15 @@ def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly'
             old_count = db.table_get_value_with_ID('professional_area', professional_area_id, 'num_records')['num_records']
             old_control_no = db.table_get_value_with_ID('professional_area', professional_area_id, 'control_sum')['control_sum']
 
-            (details_urls, count, control_no) = get_card_list_at_prof_area(card_url, old_count, limit)
+            # Opening the page of professional area with the list of the cards
+            try:
+                (details_urls, count, control_no) = get_card_list_at_prof_area(card_url, old_count, limit)
+            except FileNotFoundError as er:
+                logger.error(f"Failed to open page card_url, {er}")
+                print(f"Failed to open page card_url, {er}")
+                continue
 
+            # Open sucsessful, parsing the page of professional area with the list of the cards
             if old_control_no == control_no:
                 print(f" {professional_area} : No changes found")
                 logger.info(f"No changes")
@@ -235,7 +242,14 @@ def parse_sections(soup, limit = -1, prof_area_param = '', db_mode = 'checkonly'
                     batches = [details_urls[i:i+min(n,num_urls-i)] for i in range(0,num_urls,n)]
 
                     for batch in batches:
-                        details_list = multiple_urls_open(batch)
+                        try:
+                            details_list = multiple_urls_open(batch)
+                        except FileNotFoundError:
+
+                            logger.error(f"Failed to open one or several pages in a batch, abandoning page {er}")
+                            print(f"Failed to open one or several pages in a batch, abandoning page {er}")
+                            break
+
                         logger.debug(f"Batch open, batch : {batch}")
                         for details in details_list:
 
@@ -294,6 +308,18 @@ def main(limit, prof_area_param, db_mode, sql_password, api_parsing):
         print(f"Failed to open URL, error : {er}")
         logger.error(f"Failed to open URL, error : {er}")
         return
+    if db_mode == 'new':
+        answer = input("This will delete existing database, are you sure y/n? ")
+        if answer.lower() == 'y':
+            password = input("Please enter the database password :")
+            if sql_password == 'aws' and password != 'prem_leonid_richard':
+                print("Password incorrect")
+                return
+            elif password != sql_password:
+                print("Password incorrect")
+                return
+        else: return
+
     sections = parse_sections(soup, limit, prof_area_param, db_mode, sql_password, api_parsing)
 
 
