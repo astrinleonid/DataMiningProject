@@ -40,7 +40,7 @@ def open_with_grequests(urls):
     rs = (grequests.get(href) for href in urls)
     # print(rs)
     pages = grequests.map(rs)
-    logger.info(f"Reguested URLs open, responses {[page.response for page in pages]}")
+    logger.info(f"Reguested URLs open, responses {pages}")
     return [page.content for page in pages]
 
 
