@@ -1,5 +1,6 @@
 import grequests
 from bs4 import BeautifulSoup
+from service_setup import logger
 
 def local_file_open(filename):
     """
@@ -39,6 +40,7 @@ def open_with_grequests(urls):
     rs = (grequests.get(href) for href in urls)
     # print(rs)
     pages = grequests.map(rs)
+    logger.info(f"Reguested URLs open, responses {[page.response for page in pages]}")
     return [page.content for page in pages]
 
 
