@@ -14,11 +14,12 @@ JOB_FAMILY_SERIES = """
 0801 General Engineering
 """
 TRAVEL_REQUIRED = {
-'Occasional travel - Travel required up to 15% of the time.' : (True,15),
-'25% or less - Varies' : (True, 25),
-'Occasional travel - You may be expected to travel for this position.' : (True,20),
-'Occasional travel - You may be expected to travel 1-5 days per month for this position.' : (True, 20),
-'Not required' : (False, 0)
+'Occasional travel - Travel required up to 15% of the time.' : (1,15),
+'25% or less - Varies' : (1, 25),
+'Occasional travel - You may be expected to travel for this position.' : (1,20),
+'Occasional travel - You may be expected to travel 1-5 days per month for this position.' : (1, 20),
+'Occasional travel - Travel will be required three or more times per year and up to three consecutive weeks.' : (1, 20),
+'Not required' : (0, 0)
 }
 
 def parce_salary_text(text):
@@ -50,8 +51,15 @@ def parse_travel_requirements(text):
     tuple of (boolean, integer) representing general requirement for the travel
     and time percentage (if it can be derived)
     """
-    pass
 
+    pattern = '[0-9]{1,2}%'
+    percents = re.findall(pattern, text)
+    if len(percents) > 0:
+        return (1, int(percents[0].strip('%')))
+    elif text.lower().find('occasional') >= 0:
+        return (1, 20)
+    else:
+        return (0, 0)
 
 
 if __name__ == '__main__':
@@ -59,8 +67,9 @@ if __name__ == '__main__':
     # assert parce_salary_text(SALARY_TEXT) == (56205, 152058)
     # assert parce_dates_text(DATES_TEXT) == ('2021-12-01', '2022-11-30')
     #
-    # for key, value in TRAVEL_REQUIRED:
-    #     assert parse_travel_requirements(key) == value
+    for key, value in TRAVEL_REQUIRED.items():
+        print(parse_travel_requirements(key))
+        assert parse_travel_requirements(key) == value
 
 
 

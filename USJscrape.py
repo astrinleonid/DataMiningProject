@@ -33,6 +33,17 @@ def afterparse(db):
             logger.debug(f"Afterparsing: ID {i} Salary start {start_salary} max {max_salary} ")
             db.table_update_row('job_card', i, 'max_salary', max_salary)
             db.table_update_row('job_card', i, 'start_salary', start_salary)
+
+    len_db = db.current_no_of_records('travel_required')
+    for i in range(1, len_db + 1):
+        record = db.table_get_value_with_ID('travel_required', i, 'text')
+        if len(record) > 0:
+            (yesno, time_percentage) = parse_travel_requirements(record['text'])
+            db.table_update_row('travel_required', i, 'general_yes_no', yesno)
+            db.table_update_row('travel_required', i, 'time_percentage', time_percentage)
+
+
+
 def parse_job_card(details, professional_area_id, db):
     """
     Parse individual page of the job announcement

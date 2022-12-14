@@ -158,11 +158,11 @@ class StorageDatabase:
         else:
             return []
 
-    def current_no_of_records(self):
+    def current_no_of_records(self, table = 'job_card'):
         """
         Returns the number of the job announcements recorded in the database at the moment
         """
-        sql = f"SELECT MAX(ID) AS ID FROM job_card"
+        sql = f"SELECT MAX(ID) AS ID FROM {table}"
         return self.sql_exec(sql)[0]['ID']
 
     def table_update_row(self, table, ID, column, value):
