@@ -52,6 +52,9 @@ def afterparse(db):
             db.db_commit()
             print(f"500 records processed and added")
 
+    db.db_commit()
+
+
 def parse_job_card(details, professional_area_id, db):
     """
     Parse individual page of the job announcement
