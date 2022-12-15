@@ -79,7 +79,10 @@ class StorageDatabase:
                 raise pymysql.err.ProgrammingError(er)
             except pymysql.err.DataError as er:
                 print(f"\n\n SQL failed on \n {sql}")
-                raise pymysql.err.DataError(er)
+                if er.find("1406") >= 0:
+                    logger.error(f"Text too long, field not saved")
+                else:
+                    raise pymysql.err.DataError(er)
             except pymysql.err.OperationalError as er:
                 print(f"\n\n SQL failed on \n {sql}")
                 raise pymysql.err.OperationalError(er)
