@@ -19,20 +19,20 @@ def afterparse(db):
     len_db = db.current_no_of_records()
     logger.info(f"Number of job card records in the database {len_db}")
 
-    for i in range(1, len_db + 1):
-        date_record = db.table_get_value_with_ID('job_card', i, 'open_closing_dates')
-        if len(date_record) > 0:
-
-            (start_date, end_date) = parce_dates_text(date_record['open_closing_dates'])
-            logger.debug(f"Afterparsing: ID {i} Dates start {start_date} end {end_date} ")
-            db.table_update_row('job_card', i, 'end_date', end_date)
-            db.table_update_row('job_card', i, 'start_date', start_date)
-
-            salary_record = db.table_get_value_with_ID('job_card', i, 'salary')
-            (start_salary, max_salary) = parce_salary_text(salary_record['salary'])
-            logger.debug(f"Afterparsing: ID {i} Salary start {start_salary} max {max_salary} ")
-            db.table_update_row('job_card', i, 'max_salary', max_salary)
-            db.table_update_row('job_card', i, 'start_salary', start_salary)
+    # for i in range(1, len_db + 1):
+    #     date_record = db.table_get_value_with_ID('job_card', i, 'open_closing_dates')
+    #     if len(date_record) > 0:
+    #
+    #         (start_date, end_date) = parce_dates_text(date_record['open_closing_dates'])
+    #         logger.debug(f"Afterparsing: ID {i} Dates start {start_date} end {end_date} ")
+    #         db.table_update_row('job_card', i, 'end_date', end_date)
+    #         db.table_update_row('job_card', i, 'start_date', start_date)
+    #
+    #         salary_record = db.table_get_value_with_ID('job_card', i, 'salary')
+    #         (start_salary, max_salary) = parce_salary_text(salary_record['salary'])
+    #         logger.debug(f"Afterparsing: ID {i} Salary start {start_salary} max {max_salary} ")
+    #         db.table_update_row('job_card', i, 'max_salary', max_salary)
+    #         db.table_update_row('job_card', i, 'start_salary', start_salary)
 
     len_db = db.current_no_of_records('travel_required')
     for i in range(1, len_db + 1):
